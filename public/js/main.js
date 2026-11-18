@@ -81,6 +81,7 @@ function renderMs(ms) {
   renderUnit('m', Math.floor((sec % 3600) / 60)); renderUnit('s', sec % 60);
 }
 function setStatus(text, cls = '') {
+  if (window.__party && !/COBRAR/.test(text)) return;
   $('#statusLabel').textContent = text;
   const st = $('.status'); st.classList.remove('alert', 'ok'); if (cls) st.classList.add(cls);
 }
@@ -100,8 +101,9 @@ function tick() {
     if (sec % 60 === 0 || !$('#srText').textContent) {
       $('#srText').textContent = `Faltan ${remain.d} días, ${remain.h} horas, ${remain.m} minutos y ${remain.s} segundos para el aguinaldo.`;
     }
-    if (ms === 0 && !finished) { finished = true; celebrate(); }
   }
+  // la fiesta se dispara apenas el tiempo llega a cero (aunque queden milisegundos del último segundo)
+  if (ms === 0 && !finished) { finished = true; setTimeout(celebrate, 50); }
   document.querySelectorAll('.sep').forEach((s) => s.classList.toggle('off', clockState.stopped || ((ms % 1000) < 500 && ms > 0)));
   requestAnimationFrame(tick);
 }
@@ -188,14 +190,16 @@ class Actor {
     this.layer = l;
     $(l === 'back' ? '#charsBack' : '#charsFront').appendChild(this.el);
   }
-  place(x, y) {
+  place(x, y, force = false) {
+    if (director.party && !force) return;
     this.pos = { x: x - this.st.x, y: y - this.st.y };
     this.el.style.transform = `translate(${this.pos.x}px, ${this.pos.y}px)`;
   }
   show() { this.el.classList.add('on'); }
-  hide() { this.el.classList.remove('on', 'walking', 'riding', 'flying', 'face-left'); }
-  resetHome() {
-    this.act(null); this.hide(); this.place(this.st.x, this.st.y);
+  hide(force = false) { if (director.party && !force) return; this.el.classList.remove('on', 'walking', 'riding', 'flying', 'face-left'); }
+  resetHome(force = false) {
+    if (director.party && !force) return;
+    this.act(null); this.hide(force); this.place(this.st.x, this.st.y, force);
     this.setLayer(this.def.layer); this.spot = this.spots[0] || null;
   }
   nextAction() {
@@ -217,7 +221,8 @@ class Actor {
     if (a?.fx === 'weld') window.scene3d?.weld(a.dur * 1000);
     return a;
   }
-  say(text, ms = 3000, force = false) {
+  say(text, ms = 3000, force = false, party = false) {
+    if (director.party && !party) return;   // en la fiesta solo se escuchan festejos
     if (!force && activeBubbles >= 2) return;
     activeBubbles++;
     const b = document.createElement('div');
@@ -244,6 +249,7 @@ class Actor {
   }
   // Mueve el punto de apoyo del personaje a (x, y) del escenario
   async moveTo(x, y, o = {}) {
+    if (director.party) return;          // en la fiesta nadie se va del escenario
     const mode = o.mode || 'walk';
     const nx = x - this.st.x, ny = y - this.st.y;
     const dx = nx - this.pos.x, dy = ny - this.pos.y;
@@ -262,7 +268,8 @@ class Actor {
     if (mode === 'sneak') this.el.classList.add('sneaking');
     if (o.face !== false) this.el.classList.toggle('face-left', dx < -2);
     const a = this.el.animate(frames, { duration: dur, easing: o.easing || (o.arc ? 'linear' : mode === 'fly' ? 'ease-in-out' : 'linear'), fill: 'forwards' });
-    await a.finished;
+    await a.finished.catch(() => {});
+    if (director.party) return;          // la fiesta canceló el movimiento
     this.pos = { x: nx, y: ny };
     this.el.style.transform = to;
     a.cancel();
@@ -317,6 +324,7 @@ class Actor {
     this.spot = this.spots[0] || null;
   }
   async exit() {
+    if (director.party) return;
     const d = this.def, st = this.st;
     if (d.travel === 'leap') {
       await this.moveTo(this.x > 960 ? 2150 : -230, Math.min(this.y, 700), { mode: 'leap', arc: 200 });
@@ -770,6 +778,7 @@ const SCENES = [
 const BD = { active: false };
 const stageEl = $('#stage');
 function stopClock(msg) {
+  if (director.party) return;
   clockState.stopped = true;
   clockState.frozen = Math.max(0, TARGET - Date.now());
   panelEl.classList.add('frozen');
@@ -778,6 +787,7 @@ function stopClock(msg) {
   setTickerAlarm(true);
 }
 async function calibrate(dur = 4200) {
+  if (director.party) return;
   clockState.calibrating = true; clockState.stopped = false;
   panelEl.classList.remove('frozen'); panelEl.classList.add('calibrating');
   setStatus('CALIBRANDO CON HORA OFICIAL…', 'ok');
@@ -1060,21 +1070,38 @@ if (params.has('parada')) {
 /* ---------------- ¡Llegó el aguinaldo! ---------------- */
 async function celebrate() {
   director.party = true;
+  window.__party = true;
+  machineCtl.stop = machineCtl.jam = () => {};
+  // si había una parada en curso, se resuelve sola: ¡es día de cobro!
+  clockState.stopped = false; clockState.calibrating = false;
+  panelEl.classList.remove('frozen', 'calibrating');
+  machineCtl.pin(true); machineCtl.unjam(); restartMachine();
+  document.querySelectorAll('.peel, .stuck-wrench').forEach((e) => e.remove());
+  renderMs(0);
+  stageEl.classList.add('party-time');
   window.scene3d?.celebrate(true);
   const lbl = $('#faltanLabel');
   lbl.textContent = '¡LLEGÓ EL AGUINALDO!';
   lbl.classList.add('done');
-  $('#statusLabel').textContent = '¡A COBRAR! 🎉';
+  setStatus('¡A COBRAR! 🎉', 'ok');
+  setTickerAlarm(false);
+  MESSAGES.splice(0, MESSAGES.length, '🎉 ¡HOY SE COBRA EL AGUINALDO! 🎉', '¡FELIZ NAVIDAD, EQUIPO DE MANTENIMIENTO! 🎄', 'GRACIAS POR TODO EL AÑO DE TRABAJO 💪', '¡A COBRAR, GENTE! 💸');
+  tickerAnim?.cancel(); runTicker();
   $('#treeStar') && ($('#treeStar').style.opacity = 1);
   const cheers = ['¡AGUINALDO! 🎉', '¡A cobrar, gente!', '¡Feliz Navidad, taller! 🎄', '¡Lo logramos!', '¡Tereré y aguinaldo!'];
   for (const a of actors) {
     a.el.getAnimations().forEach((x) => x.cancel());
-    a.resetHome();
+    a.resetHome(true);
     a.el.classList.remove('no-chipa', 'no-wrench');
     a.show();
     a.el.classList.add('party');
   }
-  setInterval(() => { activeBubbles = Math.min(activeBubbles, 1); pick(actors).say(pick(cheers), 2400); }, 1600);
+  document.querySelectorAll('.bubble').forEach((b) => b.remove()); activeBubbles = 0;
+  setInterval(() => {
+    stageEl.classList.remove('alarm', 'blackout', 'flicker');
+    machineCtl.pin(true); renderMs(0);
+  }, 400);
+  setInterval(() => { activeBubbles = Math.min(activeBubbles, 1); pick(actors).say(pick(cheers), 2400, false, true); }, 1600);
   const cols = ['#ff3b3b', '#3dff7a', '#ffd23f', '#4fc3ff', '#ff7bd5', '#fff'];
   setInterval(() => {
     for (let i = 0; i < 6; i++) {
