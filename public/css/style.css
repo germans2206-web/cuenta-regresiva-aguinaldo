@@ -326,3 +326,9 @@ html, body { background: radial-gradient(120% 90% at 50% 40%, #13243d 0%, #0a142
 .fan-blades { animation: spin .7s linear infinite; }
 .drum { animation: spin 1.2s linear infinite; }
 #machine.stopped .conveyor-belt, #machine.stopped .crate, #machine.stopped .fan-blades, #machine.stopped .drum, #machine.stopped .piston-rod { animation-play-state: paused; }
+
+/* Personajes del frente por delante del cartel (así no se les corta la cabeza en las luces);
+   el oscurecimiento del apagón y las balizas quedan por encima de ellos */
+#charsFront .char { z-index: 10; }
+#darkness { z-index: 11; }
+.beacon { z-index: 12; }

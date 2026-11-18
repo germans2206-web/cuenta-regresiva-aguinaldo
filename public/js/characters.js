@@ -894,7 +894,7 @@ const parrot = {
   id: 'parrot', name: 'Loro', vb: [220, 230], anchor: [100, 222], scale: 0.85,
   station: { x: 205, y: 456 }, layer: 'front', enter: 'fly', gap: 0.5,
   travel: 'fly', roamChance: 0.45,
-  spots: [{ x: 205, y: 456 }, { x: 300, y: 202 }, { x: 1150, y: 238 }, { x: 1680, y: 405 }, { lights: 480 }, { lights: 1480 }],
+  spots: [{ x: 205, y: 456 }, { x: 300, y: 202 }, { x: 1150, y: 238 }, { x: 1680, y: 405 }, { x: 760, y: 238 }],
   svg: `
 <g class="root" ${S('100 222')}>
   <g class="tail" ${S('86 168', 'osc 1.6s ease-in-out infinite alternate', '--a:-5deg;--b:6deg')}>
