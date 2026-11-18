@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Faltan… · Cuenta regresiva al Aguinaldo 2026</title>
+  <meta name="description" content="Panel del taller de mantenimiento: cuenta regresiva al cobro del aguinaldo, 15 de diciembre." />
+  <meta name="theme-color" content="#0b0d12" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+  <link rel="preload" href="fonts/chakra-petch-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/saira-stencil-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/characters.css" />
+</head>
+<body>
+  <!-- Fondo 3D (Three.js) -->
+  <canvas id="bg3d" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- Escenario 1920x1080 escalado al tamaño de la pantalla -->
+  <div id="viewport">
+    <main id="stage">
+      <!-- Cartel LED superior -->
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-tag">AVISOS DEL TALLER</div>
+        <div class="ticker-window"><div class="ticker-track" id="tickerTrack"></div></div>
+      </div>
+
+      <!-- Maquinaria (engranajes, cables, caños, luces) dibujada por JS -->
+      <svg id="machine" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
+
+      <!-- Personajes de atrás (detrás del panel) -->
+      <div id="charsBack" class="char-layer"></div>
+
+      <!-- Panel digital -->
+      <section id="panel" aria-live="polite">
+        <div class="hazard hazard-top"></div>
+        <div class="plate">
+          <span class="led led-green"></span>
+          PANEL DE CONTROL · AGUINALDO 2026 · OT N.º 1512
+          <span class="led led-red blink"></span>
+        </div>
+        <h1 class="faltan" id="faltanLabel">FALTAN</h1>
+        <div class="clock" id="clock">
+          <div class="unit" data-unit="d"><div class="digits"></div><span class="lbl">DÍAS</span></div>
+          <div class="sep"><i></i><i></i></div>
+          <div class="unit" data-unit="h"><div class="digits"></div><span class="lbl">HORAS</span></div>
+          <div class="sep"><i></i><i></i></div>
+          <div class="unit" data-unit="m"><div class="digits"></div><span class="lbl">MINUTOS</span></div>
+          <div class="sep"><i></i><i></i></div>
+          <div class="unit" data-unit="s"><div class="digits"></div><span class="lbl">SEGUNDOS</span></div>
+        </div>
+        <div class="panel-foot">
+          <span>FECHA OBJETIVO: <b id="targetLabel">15/12/2026</b></span>
+          <span class="status"><span class="led led-amber blink"></span> ESTADO: <b id="statusLabel">EN PROCESO</b></span>
+        </div>
+        <div class="hazard hazard-bottom"></div>
+        <i class="rivet r1"></i><i class="rivet r2"></i><i class="rivet r3"></i><i class="rivet r4"></i>
+        <div class="screen-sr" id="srText"></div>
+      </section>
+
+      <!-- Batería de aguinaldo -->
+      <div class="battery" aria-hidden="true">
+        <span class="battery-lbl">NIVEL DE CARGA DEL AGUINALDO</span>
+        <div class="battery-body"><div class="battery-fill" id="batteryFill"></div><div class="battery-cells"></div></div>
+        <span class="battery-pct" id="batteryPct">0%</span>
+      </div>
+
+      <!-- Personajes de adelante -->
+      <div id="charsFront" class="char-layer"></div>
+
+      <!-- Tanque al frente (el pulpo sale desde adentro) -->
+      <svg id="frontProps" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
+
+      <div id="bubbles" class="char-layer"></div>
+      <div id="fx" class="char-layer"></div>
+    </main>
+  </div>
+
+  <script type="module" src="js/scene3d.bundle.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

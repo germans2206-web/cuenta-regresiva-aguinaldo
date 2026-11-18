@@ -1,0 +1,17 @@
+{
+  "name": "cuenta-regresiva-aguinaldo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Panel de cuenta regresiva al aguinaldo (15/12) para el taller de mantenimiento, con animales animados y fondo 3D.",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/scene3d.js --bundle --minify --format=esm --target=es2020 --outfile=public/js/scene3d.bundle.js",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "^0.187.0",
+    "wrangler": "^4.0.0"
+  }
+}

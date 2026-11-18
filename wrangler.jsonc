@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cuenta-regresiva-aguinaldo",
+  "compatibility_date": "2026-11-01",
+  // Sitio 100% estático servido por Workers Static Assets (sin script de Worker)
+  "assets": {
+    "directory": "./public"
+  }
+}
