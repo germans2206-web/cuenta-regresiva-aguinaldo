@@ -152,3 +152,6 @@
 
 .peel, .stuck-wrench { position: absolute; font-size: 64px; line-height: 1; pointer-events: none; filter: drop-shadow(0 4px 0 rgba(0,0,0,.4)); }
 .stuck-wrench { font-size: 90px; z-index: 4; }
+@keyframes sensorled { 0%, 65% { fill: #ff3b2f; } 66%, 100% { fill: #5dffa0; } }
+@keyframes trip { 0%, 8% { transform: none; } 22% { transform: translateX(26px) rotate(22deg); } 34%, 66% { transform: translate(44px, 18px) rotate(72deg); } 82% { transform: translateX(10px) rotate(8deg); } 100% { transform: none; } }
+@keyframes paintwalk { from { transform: translateX(0); } to { transform: translateX(36px); } }

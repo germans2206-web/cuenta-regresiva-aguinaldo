@@ -853,6 +853,194 @@ const SCENES = [
       await Promise.all([P.exit(), Oc.exit()]);
     },
   },
+  {
+    // 18) El anó y el loro cambian cables (mantenimiento programado)
+    cast: ['bird', 'parrot'],
+    async run() {
+      const B = A.bird, L = A.parrot;
+      await come(L, 1150, 238);
+      L.act('lockout'); L.say('Mantenimiento programado: cambio de cables. Equipo bloqueado 🔒', 3200, true);
+      await sleep(2000);
+      plannedStop('CAMBIO DE CABLES');
+      await come(B, 1500, 528);
+      B.act('pull'); B.say('Saco el cable viejo… ¡qué duro está! 🐦', 2600, true);
+      await sleep(2600);
+      L.act('radio'); L.say('¡Rojo con rojo, azul con azul! ¿O era al revés? 📻', 3000, true);
+      B.act('peck'); await sleep(1400);
+      B.say('¡AY! ¡Era al revés! 😵', 2200, true);
+      await sleep(2200);
+      B.act('wiring'); L.act('supervise'); L.say('Prueba de continuidad… anotando 📋', 3000, true);
+      await sleep(4200);
+      plannedRestart();
+      B.act('sing'); L.act('dance'); B.say('¡Cables nuevos y ordenados! 🎵', 2600, true);
+      await calibrate(3200);
+      B.act(null); L.act(null);
+      await Promise.all([B.exit(), L.exit()]);
+    },
+  },
+  {
+    // 19) El oso repara el motor del reloj y el ratón lo calibra al terminar
+    cast: ['bear', 'mouse'],
+    async run() {
+      const O = A.bear, M = A.mouse;
+      await O.enter(); await O.moveTo(880, FLOOR, { mode: 'walk' });
+      O.act('sweat'); O.say('Este motor viene haciendo un ruidito raro… 🤔', 2800, true);
+      await sleep(2800);
+      plannedStop('MANTENIMIENTO DEL MOTOR');
+      O.act('motor'); O.say('Paro el reloj un ratito: cambio rodamiento y tenso la correa 🔧', 3400, true);
+      await sleep(4600);
+      O.act('hammer'); O.say('Un golpecito de precisión… ¡PUM! 🔨', 2400, true);
+      await sleep(2400);
+      O.act('motor'); await sleep(2000);
+      plannedRestart();
+      O.say('¡Motor como nuevo! Ratón, ¿calibrás vos? 🐻', 2800, true);
+      await come(M, 566, 242);
+      M.act('sensor'); M.say('Primero el sensor de velocidad… ✔', 2600, true);
+      await sleep(2800);
+      M.act('tablet'); M.say('Ahora sincronizo con la hora oficial 🛰️', 3000, true);
+      await calibrate();
+      M.act('salute'); O.act('dance'); O.say('¡Equipo de lujo! 💪', 2400, true);
+      await sleep(2600);
+      M.act(null); O.act(null);
+      await Promise.all([M.exit(), O.exit()]);
+    },
+  },
+  {
+    // 20) Trabajo programado entre el pato torpe y el pinscher nervioso
+    cast: ['duck', 'pinscher'],
+    async run() {
+      const D = A.duck, P = A.pinscher;
+      await Promise.all([D.enter(), P.enter()]);
+      await P.moveTo(1420, FLOOR, { mode: 'walk', speed: 0.6 });
+      D.act('quack'); D.say('¡Hoy nos toca el preventivo juntos, perrito! ⛑️', 2800, true);
+      await sleep(2600);
+      P.act('growl'); P.say('Vos no toques nada. NADA. 😠', 2600, true);
+      await sleep(2600);
+      D.act('trip'); D.say('¡CUAC! Perdón, se me cayó todo… 😅', 2800, true);
+      P.act('tremble'); await sleep(3400);
+      D.act('paint'); D.say('Mientras tanto pinto la línea de seguridad 🖌️', 2600, true);
+      await sleep(2000);
+      P.el.classList.add('painted'); P.act('bark'); P.say('¡¡ME PINTASTE LA PATA!! 😡', 2600, true);
+      await sleep(2600);
+      D.act('tangle'); D.say('Tranquilo, tranquilo… ¡ay, me enredé! 😵', 2600, true);
+      P.act('chase'); P.say('No puedo trabajar así… ¡NO PUEDO! 🌀', 2600, true);
+      await sleep(3200);
+      D.act(null); P.act('tremble');
+      D.say('¡Terminamos! ¿Mañana seguimos juntos? 🦆', 2800, true);
+      await sleep(2000);
+      P.act('bark'); P.say('¡¡NO!! Pido cambio de turno 😤', 2400, true);
+      await sleep(1200);
+      P.act(null); await P.moveTo(2100, FLOOR, { mode: 'run', speed: 1.2 });
+      P.el.classList.remove('painted'); P.resetHome();
+      D.act('coffee'); D.say('Qué perrito tan simpático… ☕', 2600, true);
+      await sleep(2800); D.act(null); await D.exit();
+    },
+  },
+  {
+    // 21) El mono cambia un rodamiento y el ratón ajusta el sensor de vibración
+    cast: ['monkey', 'mouse'],
+    async run() {
+      const K = A.monkey, M = A.mouse;
+      await come(K, 1440, FLOOR);
+      K.act('chest'); K.say('¡Este rodamiento suena a maraca! Lo cambio 🐒', 2800, true);
+      await sleep(2400);
+      plannedStop('CAMBIO DE RODAMIENTO');
+      K.act('bearing'); await sleep(4400);
+      K.say('¡Rodamiento nuevo! Ratón, revisá la vibración 🔧', 2800, true);
+      await come(M, 1320, 238);
+      M.act('sensor'); M.say('Vibración: 2,1 mm/s… ¡dentro de tolerancia! ✔', 3200, true);
+      await sleep(3400);
+      plannedRestart();
+      K.act('flip'); M.act('salute'); M.say('Equipo liberado para producción 🐭', 2600, true);
+      await calibrate(3000);
+      K.act(null); M.act(null);
+      await Promise.all([K.exit(), M.exit()]);
+    },
+  },
+  {
+    // 22) El pato le alcanza las herramientas equivocadas al oso
+    cast: ['bear', 'duck'],
+    async run() {
+      const O = A.bear, D = A.duck;
+      await Promise.all([O.enter(), D.enter()]);
+      await O.moveTo(1180, FLOOR, { mode: 'walk' });
+      O.act('motor'); O.say('Pato, alcanzame la llave 14, porfa 🔧', 2600, true);
+      await sleep(2600);
+      D.act('measure'); D.say('¡Ahí va! 🦆', 1800, true);
+      await sleep(1800);
+      O.act('sweat'); O.say('…Esto es un multímetro 😑', 2400, true);
+      await sleep(2400);
+      D.act('coffee'); D.say('¡Perdón! ¿Esto entonces? ☕', 2400, true);
+      await sleep(2400);
+      O.act('yawn'); O.say('Eso es tu cocido… 🥱', 2400, true);
+      await sleep(2400);
+      D.act('trip'); D.say('¡Ya sé! La caja entera… ¡CUAC! 💥', 2800, true);
+      await sleep(3400);
+      O.act('hammer'); O.say('Mejor lo arreglo a martillazos y listo 🐻', 2600, true);
+      D.act('quack'); await sleep(2800);
+      O.act(null); D.act(null);
+      await Promise.all([O.exit(), D.exit()]);
+    },
+  },
+  {
+    // 23) El conejo trae repuestos y el pulpo suelda la placa
+    cast: ['rabbit', 'octo'],
+    async run() {
+      const R = A.rabbit, Oc = A.octo;
+      await Oc.enter(); Oc.act('check'); Oc.say('Me faltan resistencias para la placa del reloj… 📋', 2800, true);
+      R.act('delivery'); await R.enter();
+      await R.moveTo(560, FLOOR, { mode: 'ride', speed: 0.6 });
+      R.act('bell'); R.say('¡Envío express! Resistencias, estaño y chipa 📦', 2800, true);
+      await sleep(2800);
+      Oc.act('pcb'); Oc.say('¡Justo a tiempo! Soldando con 4 brazos a la vez 🐙', 3000, true);
+      R.act('carrot'); await sleep(4400);
+      Oc.act('wave'); Oc.say('¿La chipa también era para la placa? 😋', 2600, true);
+      R.act('wheelie'); R.say('¡Esa es mi propina! 🐰', 2400, true);
+      await sleep(2600);
+      R.act(null); Oc.act(null);
+      await Promise.all([R.exit(), Oc.exit()]);
+    },
+  },
+  {
+    // 24) El loro bloquea la máquina y el pinscher quiere "un ajustecito"
+    cast: ['parrot', 'pinscher'],
+    async run() {
+      const L = A.parrot, P = A.pinscher;
+      await P.enter(); P.act('sniff');
+      await come(L, 1420, 912);
+      L.act('lockout'); L.say('Máquina M24 bloqueada por mantenimiento 🔒', 2800, true);
+      await sleep(2800);
+      P.act('torque'); P.say('Es solo un ajustecito… nadie se va a enterar 😏', 2600, true);
+      await sleep(1600);
+      L.act('snitch'); L.say('¡ALTO! ¡Equipo bloqueado! ¡Infracción! 🦜', 2800, true);
+      P.act('tremble'); await sleep(2800);
+      L.act('supervise'); L.say('Primero el permiso de trabajo, después la llave 📋', 3000, true);
+      P.act('beg'); P.say('Bueno… ¿dónde firmo? 🥺', 2600, true);
+      await sleep(3000);
+      L.act(null); P.act('torque'); P.say('Con permiso firmado: ¡CLICK! 120 Nm ✔', 2600, true);
+      await sleep(2800);
+      P.act(null);
+      await Promise.all([L.exit(), P.exit()]);
+    },
+  },
+  {
+    // 25) El pato tropieza con la escoba del chanchito
+    cast: ['pig', 'duck'],
+    async run() {
+      const G = A.pig, D = A.duck;
+      await G.enter(); G.act('sweep'); G.say('5S: piso limpio y ordenado 🧹', 2400, true);
+      await D.enter(); await D.moveTo(1000, FLOOR, { mode: 'walk', speed: 0.35 });
+      D.act('trip'); D.say('¡CUAC! ¿Quién puso una escoba en el pasillo?', 2800, true);
+      G.act('angry'); await sleep(3400);
+      G.say('¡Estaba barriendo, pato! 😤', 2400, true);
+      D.act('paint'); D.say('¡Te ayudo! Pinto una línea así nadie más se tropieza 🖌️', 3000, true);
+      await sleep(3600);
+      G.act('filter'); G.say('…Mejor andá a tomar un cocido, ¿sí? 🐷', 2800, true);
+      D.act('coffee'); await sleep(3000);
+      G.act(null); D.act(null);
+      await Promise.all([G.exit(), D.exit()]);
+    },
+  },
 ];
 
 /* ---------------- Paradas del reloj: todos ayudan a repararlo ---------------- */
@@ -866,6 +1054,19 @@ function stopClock(msg) {
   stageEl.classList.add('alarm');
   setStatus(msg || '⚠ PARADA', 'alert');
   setTickerAlarm(true);
+}
+// Mantenimiento programado: el reloj se pausa sin alarma y después se calibra
+function plannedStop(label) {
+  if (director.party || BD.active) return;
+  clockState.stopped = true;
+  clockState.frozen = Math.max(0, TARGET - Date.now());
+  panelEl.classList.add('frozen');
+  setStatus('🔧 ' + label, 'ok');
+  machineCtl.stop(1400);
+}
+function plannedRestart() {
+  machineCtl.start();
+  setStatus('ARRANCANDO…', 'ok');
 }
 async function calibrate(dur = 4200) {
   if (director.party) return;
@@ -1120,7 +1321,7 @@ const director = {
       if (BD.active) { await sleep(1000); continue; }
       if (now > this.nextBreakdown) {
         const opts = BREAKDOWNS.filter((b) => !A[b.instigator].busy);
-        if (opts.length) { this.nextBreakdown = Infinity; this.breakdown().then(() => { this.nextBreakdown = performance.now() + rnd(150000, 240000); }); await sleep(1000); continue; }
+        if (opts.length && !clockState.stopped && !clockState.calibrating) { this.nextBreakdown = Infinity; this.breakdown().then(() => { this.nextBreakdown = performance.now() + rnd(150000, 240000); }); await sleep(1000); continue; }
         this.nextBreakdown = now + 5000;
       }
       if (now > this.nextScene) {
