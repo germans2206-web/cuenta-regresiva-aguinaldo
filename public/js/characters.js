@@ -197,7 +197,7 @@ const bear = {
     { id: 'terere', dur: 4.5, hide: ['d-al', 'd-ar', 'd-eyes'], say: ['Pausa técnica: tereré rupa 🧉', 'Con este calor, tereré bien helado'] },
     { id: 'dance', dur: 4, hide: ['d-al', 'd-ar', 'd-eyes', 'd-mouth'], say: ['¡Ya se siente el aguinaldo! 💃', '¡Faltan {d} días! ¡A bailar!'] },
     { id: 'yawn', dur: 4, hide: ['d-al', 'd-ar', 'd-eyes', 'd-mouth'], say: ['Aaaaah… ¿ya es 15? 🥱', 'Cinco minutitos más… 😴'] },
-    { id: 'watch', dur: 4, hide: ['d-al'], say: ['Según mi reloj faltan {d} días y {h} horas ⌚', 'Faltan {m} minutos… para la próxima hora'] },
+    { id: 'watch', dur: 4, hide: ['d-al'], say: ['Según mi reloj faltan {d} días y {h} horas ⌚', 'Este año el aguinaldo va al colchón: el banco más sólido del país 🛏️', 'Faltan {m} minutos… para la próxima hora'] },
   ],
 };
 
@@ -370,7 +370,7 @@ const octo = {
     { id: 'multi', dur: 5, hide: ['d-tl'], say: ['8 brazos y aún así no alcanzan para tantas OT', 'Llave, destornillador, aceite y planilla… ¡multitarea!'] },
     { id: 'valve', dur: 4.5, hide: ['d-tl', 'd-mouth'], say: ['Cerrando la válvula de gastos hasta el 15 💸', 'Esta válvula está más dura que el bolsillo a fin de mes'] },
     { id: 'ink', dur: 3.5, say: ['¡Uy! Me asustó el compresor 😳', '¡Perdón! Tinta en todo el taller…'] },
-    { id: 'check', dur: 4.5, hide: ['d-tl'], say: ['Preventivo ✔ Lubricación ✔ Aguinaldo ⏳', 'Checklist del día: sobrevivir hasta el 15'] },
+    { id: 'check', dur: 4.5, hide: ['d-tl'], say: ['Preventivo ✔ Lubricación ✔ Aguinaldo ⏳', 'Checklist: aguinaldo ⏳ banco abierto ✔ …¿seguro? 🤔', 'Checklist del día: sobrevivir hasta el 15'] },
     { id: 'juggle', dur: 4, hide: ['d-tl'], say: ['Malabares con los repuestos que faltan en el almacén', 'Tuercas M12, M10 y M8… ¡al aire!'] },
     { id: 'coffee', dur: 3.8, hide: ['d-tl'], say: ['Un café por brazo… y me faltan seis ☕', 'Cafeína para aguantar hasta el 15 🐙'] },
     { id: 'wave', dur: 3.5, hide: ['d-tl', 'd-eyes', 'd-mouth'], say: ['¡Mba\'éichapa, gente del taller! 👋', '¡Hola! ¿Ya cobraron? Yo tampoco'] },
@@ -773,9 +773,9 @@ const pig = {
     { id: 'chipa', dur: 4, hide: ['d-al', 'd-ar', 'd-eyes'], say: ['Chipa calentita… el aguinaldo puede esperar. ¡NO, no puede!', 'Merienda reglamentaria: chipa y cocido'] },
     { id: 'gauge', dur: 4, hide: ['d-ar'], say: ['Presión OK. Mi presión no: falta el aguinaldo', 'Toc toc… ¿se trabó la aguja o es mi vista?'] },
     { id: 'sweep', dur: 4, hide: ['d-al', 'd-ar'], say: ['5S: orden y limpieza, che 🧹', 'Taller limpio, taller feliz'] },
-    { id: 'phone', dur: 4, hide: ['d-ar'], say: ['¿Hola, banco? ¿Ya depositaron el aguinaldo? 📞', 'Sí, sigo esperando… música de espera otra vez 🎵'] },
+    { id: 'phone', dur: 4, hide: ['d-ar'], say: ['¿Hola, banco? ¿Ya depositaron el aguinaldo? 📞', '¿Ueno? ¿Ueno? …¿hay alguien ahí? 📞😅', 'Tres semanas con música de espera… 🎵', 'Señorita, solo quiero saber si mi plata sigue ahí 🥲'] },
     { id: 'angry', scene: true, hide: ['d-mouth'] },
-    { id: 'dream', dur: 4.5, hide: ['d-eyes'], say: ['Soñando con los guaraníes del aguinaldo 💸', 'Con el aguinaldo me compro… ¡una chipa más grande!'] },
+    { id: 'dream', dur: 4.5, hide: ['d-eyes'], say: ['Soñando con los guaraníes del aguinaldo 💸', 'Con el aguinaldo me compro… ¡una chipa más grande!', 'Este año lo guardo en la alcancía. Soy chanchito, ¿o no? 🐷'] },
   ],
 };
 
@@ -875,7 +875,7 @@ const mouse = {
     { id: 'flash', dur: 4.5, say: ['Inspección visual: encontré… ¡una miga de chipa!', 'Con la linterna se ve todo… menos el aguinaldo'] },
     { id: 'run', dur: 4.5, say: ['¡Generando energía de respaldo! 🐭⚡', 'Corro, corro… ¡y el 15 no llega!'] },
     { id: 'carry', dur: 4, hide: ['d-al', 'd-ar'], say: ['Este repuesto pesa más que yo 😩', 'Bulón M24 para el pinscher… ¡a ver si sale!'] },
-    { id: 'tablet', dur: 4.2, hide: ['d-al', 'd-ar'], say: ['Cargando la OT en el sistema… 98%… 99%…', 'Notificación cerrada. Ahora sí, a esperar el 15'] },
+    { id: 'tablet', dur: 4.2, hide: ['d-al', 'd-ar'], say: ['Cargando la OT en el sistema… 98%… 99%…', 'Revisando que mi banco siga abierto… ✔ uf 😅', 'Notificación cerrada. Ahora sí, a esperar el 15'] },
     { id: 'peek', dur: 4.6, home: true, say: ['¿Ya es 15? ¿No? Ok, sigo trabajando', '¿Faltan {d} días? Vuelvo después…'] },
     { id: 'salute', dur: 3.5, hide: ['d-ar'], say: ['¡Todo listo, jefe! 🫡', 'Ratón de mantenimiento reportándose'] },
     { id: 'cheese', dur: 3.6, hide: ['d-al', 'd-ar'], say: ['Queso Paraguay de contrabando 🧀', 'Ñam… el mejor repuesto es el queso'] },
@@ -952,7 +952,7 @@ const parrot = {
 .c-parrot.act-supervise .head{transform:rotate(10deg);transition:transform .4s}
 .c-parrot.flying .wing{animation:flap .13s ease-in-out infinite alternate}`,
   actions: [
-    { id: 'talk', dur: 3.6, say: ['¡Aguinaldo! ¡Aguinaldo! 🦜', '¡Faltan {d} días! ¡{d} días! ¡{d} DÍAS!', '¡Lorito quiere aguinaldo!'] },
+    { id: 'talk', dur: 3.6, say: ['¡Aguinaldo! ¡Aguinaldo! 🦜', '¡Faltan {d} días! ¡{d} días! ¡{d} DÍAS!', '¡Lorito quiere aguinaldo… en efectivo! 💵', '¡Billete en mano! ¡Nada de apps raras! 🦜'] },
     { id: 'supervise', dur: 4.2, hide: ['d-wing'], say: ['Inspección de seguridad: ¿casco puesto? ✔', 'Anotando quién llega tarde… 📋', 'Permiso de trabajo en altura: firmado ✍️'] },
     { id: 'radio', dur: 4.2, hide: ['d-wing'], say: ['Taller a central: ¿cuándo cae el aguinaldo? Cambio 📻', 'Central dice: el 15. Cambio y fuera'] },
     { id: 'whistle', dur: 3.6, say: ['Fiu fiuuu… ¡a trabajar, gente! 🎵', 'Fiu fiu… ¿ese pinscher sigue con el bulón?'] },
@@ -1057,7 +1057,7 @@ const monkey = {
     { id: 'flip', dur: 3.3, hide: ['d-al', 'd-ar', 'd-mouth'], say: ['¡Mortal hacia atrás! 🤸', '¿Viste eso? ¡Diez puntos!'] },
     { id: 'chest', dur: 3.2, hide: ['d-al', 'd-ar', 'd-mouth'], say: ['¡UH UH AH AH! ¡El aguinaldo es mío! 🐒', '¡Soy el rey del taller!'] },
     { id: 'juggle', dur: 3.8, hide: ['d-al', 'd-ar'], say: ['Malabares con llaves 14, 17 y 19 🔧', '¡Mirá, sin red de seguridad!'] },
-    { id: 'selfie', dur: 3.8, hide: ['d-al', 'd-ar'], say: ['Selfie con el reloj del aguinaldo 🤳 #FaltaPoco', 'Sonrían, que va para el grupo del taller 📸'] },
+    { id: 'selfie', dur: 3.8, hide: ['d-al', 'd-ar'], say: ['Selfie con el reloj del aguinaldo 🤳 #FaltaPoco', 'Sonrían, que va para el grupo del taller 📸', 'Selfie con mi auto de lujo… ah no, es la bici del conejo 🤳'] },
     { id: 'install', scene: true, hide: ['d-al', 'd-ar'] },
     { id: 'switch', scene: true, hide: ['d-al', 'd-ar'] },
     { id: 'laugh', scene: true, hide: ['d-al', 'd-ar', 'd-eyes', 'd-mouth'] },

@@ -120,6 +120,9 @@ const MESSAGES = [
   'EL PULPO SOLICITA 8 PARES DE GUANTES AL ALMACÉN',
   'EL PINSCHER SIGUE PELEANDO CON EL BULÓN M24',
   'SEGURIDAD PRIMERO: CASCO, LENTES Y BOTINES',
+  'CONSEJO DEL TALLER: EL AGUINALDO, BIEN GUARDADITO EN EL COLCHÓN 🛏️',
+  'EL CHANCHITO SIGUE EN ESPERA CON EL BANCO: VA POR LA SEMANA 3 📞',
+  'SE BUSCA: BANCO QUE ABRA, ATIENDA Y DEVUELVA 😅',
   '¡FELIZ NAVIDAD, EQUIPO DE MANTENIMIENTO! 🎄',
 ];
 const ALARM = ['⚠ PARADA DE EMERGENCIA — RELOJ DETENIDO ⚠', 'TODO EL EQUIPO DE MANTENIMIENTO AL TALLER', '⚠ NO SE PREOCUPEN: EL AGUINALDO SIGUE EN PIE ⚠'];
@@ -235,7 +238,7 @@ class Actor {
     const topNow = this.top + this.pos.y;
     let y = topNow + 10 - bh - 26;
     if (this.def.id === 'duck') y = topNow + 120 - bh;
-    if (y < 90) y = topNow + this.h + 30;           // si no entra arriba, va debajo
+    if (y < 90) y = this.y < 300 ? 84 : topNow + this.h + 30;   // sobre el panel: arriba, sin tapar la cuenta
     y = Math.max(84, Math.min(1000 - bh, y));
     // evita que dos globos se encimen
     for (const o of bubblesLayer.querySelectorAll('.bubble:not(.out)')) {
@@ -770,6 +773,84 @@ const SCENES = [
       await sleep(2600);
       L.act(null); D.act(null);
       await Promise.all([L.exit(), D.exit()]);
+    },
+  },
+  {
+    // 15) El conejo le pide plata prestada al oso "hasta que cobre el aguinaldo"
+    cast: ['rabbit', 'bear'],
+    async run() {
+      const R = A.rabbit, O = A.bear;
+      await Promise.all([O.enter(), R.enter()]);
+      await R.moveTo(O.x + 330, FLOOR, { mode: 'ride', speed: 0.5 });
+      R.act('tired'); R.say('Che, oso… ¿me prestás 100 mil? 🙏', 2600, true);
+      await sleep(2600);
+      R.say('Te devuelvo cuando cobre el aguinaldo. ¡Palabra de conejo! 🐰', 3000, true);
+      O.act('watch'); await sleep(3000);
+      O.say('¿Y por qué no le pedís a tu banco? 🤨', 2600, true);
+      await sleep(2400);
+      R.act('flat'); R.say('Mi banco no me devuelve ni la llamada… 😅', 2800, true);
+      await sleep(2800);
+      O.act('sweat'); O.say('Bueno… pero firmás un pagaré, y el 15 me pagás sin falta 📝', 3200, true);
+      await sleep(1600);
+      const b = document.createElement('div');
+      b.className = 'bill'; b.textContent = '₲ 100.000';
+      Object.assign(b.style, { left: O.x + 40 + 'px', top: FLOOR - 220 + 'px', width: '150px', fontSize: '20px' });
+      fxLayer.appendChild(b);
+      await b.animate([{ transform: 'translate(0,0) rotate(0)' }, { transform: 'translate(150px,-90px) rotate(200deg)', offset: 0.5 }, { transform: 'translate(290px,10px) rotate(360deg)' }], { duration: 1200, easing: 'ease-in-out' }).finished.catch(() => {});
+      b.remove();
+      R.act('wheelie'); R.say('¡Trato hecho! El 15 te pago… o el 16… o el 17 😬', 3000, true);
+      await sleep(2600);
+      O.act('hammer'); O.say('¡EL 15! 😤', 2000, true);
+      await sleep(2000);
+      O.act(null); R.act(null);
+      await Promise.all([R.exit(), sleep(600).then(() => O.exit())]);
+    },
+  },
+  {
+    // 16) El mono pide un préstamo en el "Loro Bank"
+    cast: ['monkey', 'parrot'],
+    async run() {
+      const K = A.monkey, L = A.parrot;
+      await come(L, 1150, 238);
+      L.act('supervise'); L.say('Ventanilla del Loro Bank: abierta… y sin intervención 🦜😏', 3000, true);
+      await come(K, 1320, 238);
+      K.act('chest'); K.say('¡Quiero un préstamo de 50 bananas! 🍌', 2600, true);
+      await sleep(2600);
+      K.act('banana'); K.say('Lo devuelvo con el aguinaldo, ¡promesa de mono! 🐒', 2800, true);
+      await sleep(2800);
+      L.act('talk'); L.say('¿Garantía? ¿Ingresos? ¿Algún pariente en el directorio? 🤨', 3200, true);
+      await sleep(3200);
+      K.act('selfie'); K.say('Tengo esta selfie con el reloj 🤳', 2600, true);
+      await sleep(2600);
+      L.act('radio'); L.say('Central: préstamo aprobado sin preguntas… así terminan los bancos 😬📻', 3400, true);
+      await sleep(3400);
+      K.act('flip'); K.say('¡Gracias, Loro Bank! Nos vemos el 15… creo 🤸', 2800, true);
+      L.act('nap'); await sleep(2800);
+      K.act(null); L.act(null);
+      await Promise.all([K.exit(), L.exit()]);
+    },
+  },
+  {
+    // 17) El pinscher le pide la llave prestada al pulpo
+    cast: ['pinscher', 'octo'],
+    async run() {
+      const P = A.pinscher, Oc = A.octo;
+      await Promise.all([P.enter(), Oc.enter()]);
+      await P.moveTo(420, FLOOR, { mode: 'walk', speed: 0.7 });
+      P.act('beg'); P.say('Pulpo… ¿me prestás una de tus llaves? 🥺', 2600, true);
+      await sleep(2600);
+      P.say('Te la devuelvo cuando cobre el aguinaldo, ¡te juro! 🐕', 2800, true);
+      Oc.act('multi'); await sleep(2800);
+      Oc.say('Tengo 8 brazos y ya presté 7 llaves "hasta el aguinaldo" 🐙', 3200, true);
+      await sleep(3200);
+      P.act('growl'); P.say('¿Y quién te debe? ¡Decime nombres! 😤', 2600, true);
+      await sleep(2600);
+      Oc.act('check'); Oc.say('Está todo anotado en la planilla… cobro el 16 📋', 3000, true);
+      await sleep(3000);
+      Oc.act('wave'); P.act('chase'); P.say('¡Aunque sea prestame una cola nueva! 🌀', 2400, true);
+      await sleep(2600);
+      P.act(null); Oc.act(null);
+      await Promise.all([P.exit(), Oc.exit()]);
     },
   },
 ];

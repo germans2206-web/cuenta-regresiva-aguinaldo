@@ -1,5 +1,7 @@
 # ⚙️ Cuenta regresiva al Aguinaldo — Taller de Mantenimiento
 
+Estética "calibre nocturno" de relojería suiza: platina con perlado, puentes de rodio con Côtes de Genève, ruedas de oro y acero esqueletadas, rubíes, volante con espiral y rueda de escape que avanza un diente por segundo.
+
 Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos · segundos_** hasta el cobro del aguinaldo
 (**15/12/2026, 00:00 hora de Paraguay**), con un taller animado de fondo y 8 animales trabajando.
 
@@ -31,7 +33,7 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
 ## Parámetros de URL
 - `?fecha=2026-12-15T08:00` → cambia la fecha/hora objetivo (hora de Paraguay).
 - `?demo=20` → prueba: la cuenta llega a cero en 20 segundos.
-- `?escena=0` … `?escena=14` → muestra una escena entre animales puntual.
+- `?escena=0` … `?escena=17` (15 a 17: préstamos "hasta que cobre el aguinaldo") → muestra una escena entre animales puntual.
 - `?parada=0` … `?parada=2` → muestra una parada puntual (perno robado, apagón, atasco).
 
 ## Desarrollo y despliegue (Cloudflare Workers – Static Assets)

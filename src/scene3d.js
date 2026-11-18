@@ -22,8 +22,8 @@ function init() {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#0b0d12');
-  scene.fog = new THREE.Fog('#0b0d12', 38, 95);
+  scene.background = new THREE.Color('#0a1424');
+  scene.fog = new THREE.Fog('#0a1424', 30, 80);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -39,29 +39,29 @@ function init() {
   wallTex.colorSpace = THREE.SRGBColorSpace;
   const wall = new THREE.Mesh(
     new THREE.PlaneGeometry(160, 80),
-    new THREE.MeshStandardMaterial({ map: wallTex, color: '#8b95a3', roughness: 0.75, metalness: 0.55 })
+    new THREE.MeshStandardMaterial({ map: wallTex, color: '#5d7091', roughness: 0.8, metalness: 0.5 })
   );
   wall.position.z = -26;
   scene.add(wall);
 
   // ---------- Luces ----------
-  scene.add(new THREE.HemisphereLight('#9fb4d6', '#2a1c12', 0.55));
+  scene.add(new THREE.HemisphereLight('#7f97c4', '#0a1424', 0.45));
   const key = new THREE.SpotLight('#ffd7a0', 900, 120, Math.PI / 5, 0.6, 1.4);
   key.position.set(-12, 26, 20); key.target.position.set(0, 0, -20);
   scene.add(key, key.target);
   const key2 = new THREE.SpotLight('#ffe2b8', 700, 120, Math.PI / 5, 0.6, 1.4);
   key2.position.set(16, 24, 18); key2.target.position.set(4, -2, -20);
   scene.add(key2, key2.target);
-  const red = new THREE.PointLight('#ff3b24', 120, 60, 1.6); red.position.set(0, 2, -8); scene.add(red);
-  const green = new THREE.PointLight('#2fe07a', 70, 50, 1.6); green.position.set(-22, 12, -10); scene.add(green);
+  const red = new THREE.PointLight('#ff6a3c', 70, 60, 1.6); red.position.set(0, 2, -8); scene.add(red);
+  const green = new THREE.PointLight('#7fa6ff', 60, 50, 1.6); green.position.set(-22, 12, -10); scene.add(green);
   const weld = new THREE.PointLight('#7fc8ff', 0, 40, 1.4); weld.position.set(-12, -8, -6); scene.add(weld);
 
   // ---------- Engranajes 3D ----------
   const mats = {
-    steel: new THREE.MeshStandardMaterial({ color: '#9aa4b2', metalness: 0.95, roughness: 0.32 }),
-    brass: new THREE.MeshStandardMaterial({ color: '#c99a3a', metalness: 0.95, roughness: 0.3 }),
-    copper: new THREE.MeshStandardMaterial({ color: '#b8683a', metalness: 0.95, roughness: 0.35 }),
-    dark: new THREE.MeshStandardMaterial({ color: '#4a525e', metalness: 0.9, roughness: 0.45 }),
+    steel: new THREE.MeshStandardMaterial({ color: '#7d8ba3', metalness: 0.95, roughness: 0.35 }),
+    brass: new THREE.MeshStandardMaterial({ color: '#a8853a', metalness: 0.95, roughness: 0.32 }),
+    copper: new THREE.MeshStandardMaterial({ color: '#9a6a58', metalness: 0.95, roughness: 0.38 }),
+    dark: new THREE.MeshStandardMaterial({ color: '#2a3548', metalness: 0.9, roughness: 0.45 }),
   };
   const gears = [];
   const module = 0.42;
@@ -109,7 +109,7 @@ function init() {
   ], -23, 7);
 
   // ---------- Caños de cobre ----------
-  const pipeMat = new THREE.MeshStandardMaterial({ color: '#b8733a', metalness: 0.9, roughness: 0.3 });
+  const pipeMat = new THREE.MeshStandardMaterial({ color: '#2a3548', metalness: 0.9, roughness: 0.35 });
   const pipePaths = [
     [[-70, -14, -18], [-20, -14, -18], [-14, -10, -18], [-14, 22, -18], [-8, 26, -18], [70, 26, -18]],
     [[-70, 20, -24], [70, 20, -24]],
@@ -134,14 +134,14 @@ function init() {
   }
   snowGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   const snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({
-    size: 0.32, map: softDot('#ffffff'), transparent: true, depthWrite: false, opacity: 0.85,
+    size: 0.32, map: softDot('#ffffff'), transparent: true, depthWrite: false, opacity: 0.55,
     blending: THREE.AdditiveBlending, fog: true,
   }));
   scene.add(snow);
 
   // ---------- Bokeh navideño ----------
   const bokeh = [];
-  const bcols = ['#ff3b3b', '#3dff7a', '#ffd23f', '#4fc3ff', '#ff9a3c'];
+  const bcols = ['#ffd166', '#fff1d0', '#ffcf70', '#7fa6ff'];
   for (let i = 0; i < 46; i++) {
     const mat = new THREE.SpriteMaterial({ map: softDot(bcols[i % bcols.length], true), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.5 });
     const s = new THREE.Sprite(mat);
@@ -196,12 +196,12 @@ function init() {
     }
     snowGeo.attributes.position.needsUpdate = true;
 
-    for (const b of bokeh) b.s.material.opacity = 0.25 + 0.3 * (0.5 + 0.5 * Math.sin(t * b.sp + b.ph));
+    for (const b of bokeh) b.s.material.opacity = 0.1 + 0.2 * (0.5 + 0.5 * Math.sin(t * b.sp + b.ph));
 
     // chispazo de soldadura (cuando el oso suelda)
     const now = performance.now();
     weld.intensity = now < weldUntil ? 60 + Math.random() * 160 : weld.intensity * 0.85;
-    red.intensity = 110 + Math.sin(t * 2) * 30 + (celebrate ? Math.random() * 200 : 0);
+    red.intensity = 60 + Math.sin(t * 2) * 15 + (celebrate ? Math.random() * 200 : 0);
 
     camera.position.x += (mx * 2.2 + Math.sin(t * 0.15) * 1.2 - camera.position.x) * 0.03;
     camera.position.y += (-my * 1.4 + Math.cos(t * 0.12) * 0.6 - camera.position.y) * 0.03;
@@ -259,7 +259,7 @@ function makeWallTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const g = c.getContext('2d');
-  g.fillStyle = '#3a414b'; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = '#1a2840'; g.fillRect(0, 0, 256, 256);
   for (let i = 0; i < 2600; i++) { // rayado del metal
     g.fillStyle = `rgba(255,255,255,${Math.random() * 0.04})`;
     g.fillRect(Math.random() * 256, Math.random() * 256, Math.random() * 40, 1);

@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#0b0d12" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E" />
   <link rel="preload" href="fonts/chakra-petch-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="fonts/saira-stencil-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/cinzel-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/characters.css" />
 </head>
@@ -22,7 +22,7 @@
     <main id="stage">
       <!-- Cartel LED superior -->
       <div class="ticker" aria-hidden="true">
-        <div class="ticker-tag">AVISOS DEL TALLER</div>
+        <div class="ticker-tag">Avisos del taller</div>
         <div class="ticker-window"><div class="ticker-track" id="tickerTrack"></div></div>
       </div>
 
@@ -34,10 +34,9 @@
 
       <!-- Panel digital -->
       <section id="panel" aria-live="polite">
-        <div class="hazard hazard-top"></div>
         <div class="plate">
           <span class="led led-green"></span>
-          PANEL DE CONTROL · AGUINALDO 2026 · OT N.º 1512
+          Calibre Aguinaldo 2026 · OT n.º 1512
           <span class="led led-red blink"></span>
         </div>
         <h1 class="faltan" id="faltanLabel">PARA EL AGUINALDO FALTA</h1>
@@ -54,14 +53,13 @@
           <span>FECHA OBJETIVO: <b id="targetLabel">15/12/2026</b></span>
           <span class="status"><span class="led led-amber blink"></span> ESTADO: <b id="statusLabel">EN PROCESO</b></span>
         </div>
-        <div class="hazard hazard-bottom"></div>
         <i class="rivet r1"></i><i class="rivet r2"></i><i class="rivet r3"></i><i class="rivet r4"></i>
         <div class="screen-sr" id="srText"></div>
       </section>
 
       <!-- Batería de aguinaldo -->
       <div class="battery" aria-hidden="true">
-        <span class="battery-lbl">NIVEL DE CARGA DEL AGUINALDO</span>
+        <span class="battery-lbl">Carga del aguinaldo</span>
         <div class="battery-body"><div class="battery-fill" id="batteryFill"></div><div class="battery-cells"></div></div>
         <span class="battery-pct" id="batteryPct">0%</span>
       </div>
