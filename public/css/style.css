@@ -234,3 +234,6 @@ html, body {
   animation: beam 1.1s linear infinite; mix-blend-mode: screen; }
 @keyframes beam { to { transform: rotate(360deg); } }
 #stage.alarm .beacon { opacity: 1; }
+
+body:has(.c-pinscher.act-kick) #m24block { animation: blockshake 1.6s ease-out infinite; }
+body:has(.c-pinscher.act-win) #m24bolt { opacity: 0; }

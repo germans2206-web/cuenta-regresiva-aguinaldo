@@ -142,6 +142,7 @@
 }
 @keyframes snapjump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-80px) rotate(-12deg); } 60% { transform: translateY(-70px) rotate(8deg); } 85% { transform: translateY(0) scale(1.06,.9); } }
 @keyframes lever { 0%, 30% { transform: rotate(0); } 50%, 80% { transform: rotate(40deg); } 100% { transform: rotate(0); } }
+@keyframes sniffhead { 0%, 100% { transform: rotate(24deg) translate(6px,14px); } 50% { transform: rotate(30deg) translate(8px,16px); } }
 @keyframes pbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 @media (prefers-reduced-motion: reduce) {

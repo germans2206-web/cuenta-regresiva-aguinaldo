@@ -113,6 +113,7 @@ const bear = {
     <g class="d-eyes">${eye(102, 80)}${eye(138, 80)}</g>
     <g class="A a-terere a-dance"><path d="M95 82 q7 -9 14 0 M131 82 q7 -9 14 0" fill="none" ${ol(4)}/></g>
     <g class="A a-dance"><path d="M106 110 Q120 130 134 110 Z" fill="#7a1f1f" ${ol(3)}/></g>
+    <g class="A a-yawn"><ellipse cx="120" cy="116" rx="13" ry="15" fill="#7a1f1f" ${ol(3)}/><path d="M95 80 q7 4 14 0 M131 80 q7 4 14 0" fill="none" ${ol(4)}/></g>
     <g class="A a-sweat">
       <path d="M78 44 Q120 10 162 44 L158 56 Q120 32 82 56 Z" fill="#3e4a3f" ${ol()}/>
       <path d="M96 76 l12 5 l-12 5 M144 76 l-12 5 l12 5" fill="none" ${ol(4)}/>
@@ -169,6 +170,11 @@ const bear = {
     <g ${S('172 150', 'osc .5s ease-in-out infinite alternate', '--a:22deg;--b:-14deg')}>${limb('M172 150 Q196 120 188 86', FUR, 20)}</g>
     ${floatTxt(40, 70, '♪', 34, '#ffd23f', 1.6, 0, -20, -70)}${floatTxt(200, 60, '♫', 34, '#3dff7a', 1.6, 0.8, 20, -70)}
   </g>
+  <g class="A a-yawn">
+    <g ${S('68 150', 'osc 1.4s ease-in-out infinite alternate', '--a:-10deg;--b:4deg')}>${limb('M68 150 Q40 110 60 70', FUR, 20)}</g>
+    <g ${S('172 150', 'osc 1.4s ease-in-out infinite alternate', '--a:10deg;--b:-4deg')}>${limb('M172 150 Q200 110 180 70', FUR, 20)}</g>
+    ${floatTxt(190, 50, 'Z', 26, '#bfe8ff', 2, 0, 20, -50)}${floatTxt(200, 40, 'z', 20, '#bfe8ff', 2, 0.8, 30, -50)}
+  </g>
   <g class="A a-watch">
     ${limb('M68 150 Q80 184 118 168', FUR, 20)}
     <circle cx="112" cy="164" r="11" fill="#ffd23f" ${ol(3)}/>
@@ -181,13 +187,16 @@ const bear = {
 .c-bear.act-dance .root{animation:sway .5s ease-in-out infinite alternate}
 .c-bear.act-watch .head{transform:rotate(7deg) translate(-2px,5px);transition:transform .4s}
 .c-bear.act-terere .head{transform:rotate(-4deg);transition:transform .4s}
-.c-bear.act-sweat .root{animation:bob 1s ease-in-out infinite;--y:3px}`,
+.c-bear.act-sweat .root{animation:bob 1s ease-in-out infinite;--y:3px}
+.c-bear.act-yawn .root{animation:bob 2.8s ease-in-out infinite;--y:-6px}
+.c-bear.act-yawn .head{transform:rotate(-8deg);transition:transform .6s}`,
   actions: [
     { id: 'weld', dur: 5, hide: ['d-al', 'd-ar'], fx: 'weld', say: ['Soldando el aguinaldo pa\' que no se escape 🔥', 'Cordón prolijo, como el del aguinaldo', '¡Ojo con las chispas, gente!'] },
     { id: 'sweat', dur: 4, hide: ['d-al', 'd-eyes', 'd-mouth'], say: ['¡Qué calor, che! Y el aguinaldo sin llegar…', 'Uf… soldar en diciembre es deporte extremo'] },
     { id: 'hammer', dur: 4, hide: ['d-ar'], say: ['¡Pum! ¡Pum! Ajustando el reloj a martillazos', 'Si no entra, es que falta martillo'] },
     { id: 'terere', dur: 4.5, hide: ['d-al', 'd-ar', 'd-eyes'], say: ['Pausa técnica: tereré rupa 🧉', 'Con este calor, tereré bien helado'] },
     { id: 'dance', dur: 4, hide: ['d-al', 'd-ar', 'd-eyes', 'd-mouth'], say: ['¡Ya se siente el aguinaldo! 💃', '¡Faltan {d} días! ¡A bailar!'] },
+    { id: 'yawn', dur: 4, hide: ['d-al', 'd-ar', 'd-eyes', 'd-mouth'], say: ['Aaaaah… ¿ya es 15? 🥱', 'Cinco minutitos más… 😴'] },
     { id: 'watch', dur: 4, hide: ['d-al'], say: ['Según mi reloj faltan {d} días y {h} horas ⌚', 'Faltan {m} minutos… para la próxima hora'] },
   ],
 };
@@ -311,6 +320,11 @@ const octo = {
     <g ${S('110 172', 'osc 1.9s ease-in-out infinite alternate', '--a:8deg;--b:-10deg')}>${limb('M110 172 Q72 204 40 198', PU, 18)}</g>
     <g ${S('190 172', 'osc 2s ease-in-out infinite alternate', '--a:-8deg;--b:10deg')}>${limb('M190 172 Q228 204 260 198', PU, 18)}</g>
   </g>
+  <g class="A a-coffee">
+    ${tIdleL}
+    <g ${S('196 160', 'osc .9s ease-in-out infinite alternate', '--a:6deg;--b:-6deg')}>${limb('M196 160 Q236 150 240 120', PU, 18)}<rect x="226" y="96" width="26" height="26" rx="4" fill="#fff" ${ol(3)}/>${floatTxt(239, 90, '~', 20, '#fff', 1.4, 0, 0, -30)}</g>
+    <g ${S('190 172', 'osc 1.1s ease-in-out infinite alternate', '--a:-6deg;--b:6deg')}>${limb('M190 172 Q228 196 256 180', PU, 18)}<rect x="250" y="160" width="24" height="24" rx="4" fill="#e2283b" ${ol(3)}/></g>
+  </g>
   <g class="A a-wave">
     <g ${S('104 160', 'osc .3s ease-in-out infinite alternate', '--a:-25deg;--b:15deg')}>${limb('M104 160 Q66 130 60 80', PU, 18)}</g>
     <g ${S('196 160', 'osc .3s ease-in-out infinite alternate', '--a:25deg;--b:-15deg')}>${limb('M196 160 Q234 130 240 80', PU, 18)}</g>
@@ -358,6 +372,7 @@ const octo = {
     { id: 'ink', dur: 3.5, say: ['¡Uy! Me asustó el compresor 😳', '¡Perdón! Tinta en todo el taller…'] },
     { id: 'check', dur: 4.5, hide: ['d-tl'], say: ['Preventivo ✔ Lubricación ✔ Aguinaldo ⏳', 'Checklist del día: sobrevivir hasta el 15'] },
     { id: 'juggle', dur: 4, hide: ['d-tl'], say: ['Malabares con los repuestos que faltan en el almacén', 'Tuercas M12, M10 y M8… ¡al aire!'] },
+    { id: 'coffee', dur: 3.8, hide: ['d-tl'], say: ['Un café por brazo… y me faltan seis ☕', 'Cafeína para aguantar hasta el 15 🐙'] },
     { id: 'wave', dur: 3.5, hide: ['d-tl', 'd-eyes', 'd-mouth'], say: ['¡Mba\'éichapa, gente del taller! 👋', '¡Hola! ¿Ya cobraron? Yo tampoco'] },
   ],
 };
@@ -397,6 +412,10 @@ const rabbit = {
   <g class="leg1" ${S('130 150', 'osc .6s ease-in-out infinite alternate', '--a:-8deg;--b:12deg')}>${limb('M130 150 Q178 160 152 206', WH, 13)}<ellipse cx="154" cy="208" rx="13" ry="6" fill="${WH}" ${ol(3)}/></g>
   <g class="d-arm">${limb('M150 106 Q186 114 214 138', WH, 12)}</g>
   <g class="A a-flat a-tired">${limb('M150 106 Q186 118 212 140', WH, 12)}</g>
+  <g class="A a-carrot">
+    <g ${S('150 106', 'osc .4s ease-in-out infinite alternate', '--a:-4deg;--b:4deg')}>${limb('M150 106 Q190 112 196 96', WH, 12)}
+      <path d="M196 98 L232 84 L200 108 Z" fill="#ff8a1c" ${ol(3)}/><path d="M232 84 l10 -10 M232 84 l12 0 M232 84 l6 -12" stroke="#2fbf4f" stroke-width="5" stroke-linecap="round"/></g>
+  </g>
   <g class="A a-bell">
     <g ${S('222 130', 'osc .07s linear infinite alternate', '--a:-14deg;--b:14deg')}><path d="M214 132 q8 -18 16 0 z" fill="#ffd23f" ${ol(2)}/></g>
     ${limb('M150 106 Q186 108 216 124', WH, 12)}
@@ -441,13 +460,15 @@ const rabbit = {
 .c-rabbit.act-tired .leg1,.c-rabbit.act-tired .leg2{animation-duration:1.4s}
 .c-rabbit.act-tired .crank,.c-rabbit.act-tired .rw,.c-rabbit.act-tired .fw{animation-duration:2.8s}
 .c-rabbit.act-tired .ears{--a:-48deg!important;--b:-40deg!important}
-.c-rabbit.act-tired .head{transform:rotate(8deg) translateY(4px);transition:transform .5s}`,
+.c-rabbit.act-tired .head{transform:rotate(8deg) translateY(4px);transition:transform .5s}
+.c-rabbit.act-carrot .head{animation:bob .25s ease-in-out infinite;--y:2px}`,
   actions: [
     { id: 'ride', dur: 4, hide: ['d-mouth'], say: ['¡Voy a cobrar el aguinaldo en bici, pa\' ahorrar nafta!', '¡Paso, paso, que vengo con apuro! 🚲'] },
     { id: 'power', dur: 5, say: ['¡Pedaleando para darle energía al reloj! ⚡', 'Si dejo de pedalear se para el reloj… ¡no puedo parar!'] },
     { id: 'wheelie', dur: 4, hide: ['d-mouth'], say: ['¡Mirá, una willy! 😎', 'Nivel de felicidad: aguinaldo cerca'] },
     { id: 'bell', dur: 3, hide: ['d-arm'], say: ['¡Riiing! ¡Riiing! ¡Faltan {d} días!', '¡Atención taller, vengo a avisar!'] },
     { id: 'flat', dur: 4, hide: ['d-arm', 'd-mouth'], say: ['Pinchadura… ¡justo hoy! 😩', '¿Alguien tiene un parche? Pago con el aguinaldo'] },
+    { id: 'carrot', dur: 3.8, hide: ['d-arm'], say: ['Zanahoria energética antes de pedalear 🥕', 'Ñam ñam… combustible de conejo'] },
     { id: 'tired', dur: 4.5, hide: ['d-arm', 'd-mouth'], say: ['Faltan {d} días… y {h} horas de pedaleo 😮‍💨', 'Uf… ¿quién puso esta subida?'] },
   ],
 };
@@ -490,6 +511,7 @@ const duck = {
       <g ${S('80 320', 'osc .12s ease-in-out infinite alternate', '--a:-25deg;--b:10deg')}><path d="M84 322 Q50 290 34 250 Q70 270 96 330 Z" fill="#eef0f2" ${ol()}/></g>
       <g ${S('124 320', 'osc .12s ease-in-out infinite alternate', '--a:25deg;--b:-10deg')}><path d="M120 322 Q154 290 170 250 Q134 270 108 330 Z" fill="#eef0f2" ${ol()}/></g>
     </g>
+    <g class="A a-coffee"><path d="M70 332 Q100 318 128 330 Q104 352 72 350 Z" fill="#eef0f2" ${ol()}/><rect x="122" y="314" width="28" height="30" rx="5" fill="#fff" ${ol(3)}/><path d="M150 320 q10 2 10 10 q0 8 -10 8" fill="none" ${ol(3)}/><rect x="125" y="318" width="22" height="6" fill="#7a4a2a"/>${floatTxt(136, 304, '~', 22, '#fff', 1.4, 0, 0, -40)}${floatTxt(130, 300, '~', 18, '#fff', 1.4, 0.7, 6, -40)}</g>
     <g class="A a-measure">
       <path d="M136 370 Q150 400 170 412 M146 368 Q170 392 196 410" fill="none" stroke="${O}" stroke-width="6"/>
       <path d="M136 370 Q150 400 170 412" fill="none" stroke="#e2283b" stroke-width="3"/><path d="M146 368 Q170 392 196 410" fill="none" stroke="#333" stroke-width="3"/>
@@ -532,6 +554,7 @@ const duck = {
     { id: 'change', dur: 4.6, hide: ['d-wing', 'd-bulb'], say: ['Cambio de lámpara: ¡OT cerrada! ✅', '¡Hágase la luz… y el aguinaldo!'] },
     { id: 'wobble', dur: 3.6, hide: ['d-wing'], say: ['¡CUAC! ¡Alguien que me sostenga la escalera!', '¡¿Quién movió la escalera?!'] },
     { id: 'measure', dur: 4, hide: ['d-wing'], say: ['220 V… todo bien. Lo que no llega es el aguinaldo', 'Tensión correcta. Mi tensión, no tanto'] },
+    { id: 'coffee', dur: 3.8, hide: ['d-wing'], say: ['Cocido quemado para arrancar ☕', 'Primero el cocido, después la OT'] },
     { id: 'quack', dur: 3.5, hide: ['d-wing'], say: ['¡Cuac cuac! ¡Ya casi cobramos!', '¡Faltan {d} días, cuac!'] },
   ],
 };
@@ -543,14 +566,9 @@ const BLK = '#1f1f24', TAN = '#c8743a';
 const pinscher = {
   id: 'pinscher', name: 'Pinscher', vb: [300, 240], anchor: [100, 232], scale: 1.0,
   station: { x: 1290, y: 1046 }, layer: 'front', enter: 'drop', gap: 0.5,
+  travel: 'walk', walkSpeed: 0.75, roamChance: 0.55, tripChance: 0.2,
+  spots: [{ x: 1290, y: 1046 }, { x: 1000, y: 1046 }, { x: 720, y: 1046 }, { x: 1560, y: 1046 }, { x: 480, y: 1046 }],
   svg: `
-<g class="block" ${S('238 232')}>
-  <rect x="186" y="96" width="104" height="136" rx="6" fill="#59616d" ${ol()}/>
-  <rect x="186" y="96" width="104" height="14" fill="#ffc21a" ${ol(3)}/>
-  <circle cx="198" cy="122" r="4" fill="#9aa3ad"/><circle cx="278" cy="122" r="4" fill="#9aa3ad"/><circle cx="198" cy="220" r="4" fill="#9aa3ad"/><circle cx="278" cy="220" r="4" fill="#9aa3ad"/>
-  <rect x="236" y="190" width="40" height="18" rx="3" fill="#e2283b" ${ol(2)}/><text x="256" y="203" text-anchor="middle" font-family="Chakra Petch" font-weight="700" font-size="10" fill="#fff">M24</text>
-  <g class="d-bolt">${hex(222, 156, 22)}</g>
-</g>
 <ellipse cx="104" cy="232" rx="54" ry="7" fill="rgba(0,0,0,.35)"/>
 <g class="A a-win"><g ${S('222 156', 'boltpop 4.6s ease-out both')}>${hex(222, 156, 22)}</g></g>
 <g class="root" ${S('100 232')}>
@@ -577,7 +595,20 @@ const pinscher = {
     <g class="A a-struggle"><path d="M140 145 h20" ${ol(4)}/></g>
     <g class="A a-tremble">${drop(100, 100, 0, 30)}${drop(160, 96, 0.5, 30)}${drop(108, 130, 0.3, 30)}</g>
     <g class="A a-win"><path d="M140 140 Q154 156 166 140 Z" fill="#8a1c1c" ${ol(3)}/></g>
+    <g class="A a-beg"><circle cx="121" cy="117" r="8" fill="${O}"/><circle cx="143" cy="115" r="8" fill="${O}"/><circle cx="124" cy="113" r="3" fill="#fff"/><circle cx="146" cy="111" r="3" fill="#fff"/><circle cx="117" cy="120" r="1.6" fill="#fff"/><circle cx="139" cy="118" r="1.6" fill="#fff"/><path d="M144 146 q6 6 12 0" fill="none" ${ol(2.5)}/><path d="M149 149 q2 8 -3 9 q-5 -2 -1 -9z" fill="#e8667a" ${ol(1.5)}/></g>
+    <g class="A a-growl"><path d="M138 142 Q152 152 166 142 L162 150 Q152 156 142 150 Z" fill="#fff" ${ol(2.5)}/><path d="M144 143 v6 M150 145 v6 M156 145 v6 M162 143 v5" stroke="${O}" stroke-width="1.5"/><path d="M108 100 L128 110 M154 98 L136 110" ${ol(5)}/></g>
+    <g class="A a-fetch"><path d="M136 146 h40" stroke="${O}" stroke-width="13" stroke-linecap="round"/><path d="M136 146 h40" stroke="#f2ead8" stroke-width="7" stroke-linecap="round"/><circle cx="134" cy="141" r="6" fill="#f2ead8" ${ol(2)}/><circle cx="134" cy="151" r="6" fill="#f2ead8" ${ol(2)}/><circle cx="178" cy="141" r="6" fill="#f2ead8" ${ol(2)}/><circle cx="178" cy="151" r="6" fill="#f2ead8" ${ol(2)}/></g>
+    <g class="A a-eat"><circle cx="160" cy="146" r="13" fill="none" stroke="${O}" stroke-width="12"/><circle cx="160" cy="146" r="13" fill="none" stroke="#e0a84a" stroke-width="7"/><path d="M110 104 q7 -8 14 0 M134 102 q7 -8 14 0" fill="none" ${ol(4)}/></g>
+    <g class="A a-sniff">${floatTxt(176, 150, 'sniff', 14, '#fff', 1.2, 0, 20, -30)}${floatTxt(180, 160, 'sniff', 12, '#fff', 1.2, 0.6, 30, -30)}</g>
   </g>
+  <g class="A a-growl"><path d="M76 160 l4 -12 l6 10 l4 -12 l6 10 l4 -12 l6 10 l4 -12 l6 10" fill="none" ${ol(4)}/>${popTxt(196, 70, 'Grrr…', 24, '#ff5a3c', 1.2)}</g>
+  <g class="A a-dig">
+    <ellipse cx="60" cy="230" rx="34" ry="10" fill="#6b4a2b" ${ol(3)}/>
+    ${[0, 1, 2, 3, 4, 5, 6, 7].map((k) => `<circle cx="80" cy="222" r="${rnd(4, 7).toFixed(1)}" fill="#7a5532" style="animation:sparkfly ${rnd(0.4, 0.7).toFixed(2)}s ${(-rnd(0, 0.7)).toFixed(2)}s ease-out infinite;--x:${(-rnd(40, 110)).toFixed(0)}px;--y:${(-rnd(30, 90)).toFixed(0)}px"/>`).join('')}
+  </g>
+  <g class="A a-chase"><path d="M20 150 q20 -30 50 -40 M180 210 q-20 20 -60 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".7"/>${popTxt(160, 40, '¡TE AGARRO, COLA!', 18, '#ffd23f', 1.4)}</g>
+  <g class="A a-beg">${floatTxt(176, 80, '❤', 22, '#ff5a8a', 1.4, 0, 10, -50)}</g>
+  <g class="A a-eat">${floatTxt(176, 80, '❤', 22, '#ff5a8a', 1.4, 0, 10, -50)}${floatTxt(150, 70, '❤', 18, '#ff5a8a', 1.4, 0.6, -10, -50)}</g>
   <g class="A a-struggle">
     <g class="wrench-held" ${S('222 156', 'osc .16s ease-in-out infinite alternate', '--a:-4deg;--b:4deg')}>${limb('M158 144 L200 154', '#c7ced6', 9)}<circle cx="222" cy="156" r="27" fill="none" stroke="${O}" stroke-width="15"/><circle cx="222" cy="156" r="27" fill="none" stroke="#c7ced6" stroke-width="8"/></g>
     ${puff(118, 84, 3, 'rgba(240,240,240,.9)', -60)}
@@ -615,16 +646,35 @@ const pinscher = {
 .c-pinscher.act-snap .root{animation:snapjump .8s ease-in-out infinite}
 .c-pinscher.act-dizzy .root{animation:none;transform:rotate(-26deg) translate(-14px,10px);transition:transform .3s}
 .c-pinscher.act-dizzy .pupils{display:none}
-.c-pinscher.no-wrench .wrench-held{display:none}`,
+.c-pinscher.no-wrench .wrench-held{display:none}
+.c-pinscher.act-chase .root{animation:spin .55s linear infinite;transform-origin:102px 190px!important}
+.c-pinscher.act-dig .root{animation:jit .08s infinite}
+.c-pinscher.act-dig .head{transform:rotate(22deg) translateY(10px)}
+.c-pinscher.act-growl .root{animation:jit .14s infinite}
+.c-pinscher.act-growl .head{transform:rotate(10deg) translate(6px,6px)}
+.c-pinscher.act-sniff .head{animation:sniffhead .5s ease-in-out infinite}
+.c-pinscher.act-sniff .root{animation:osc 1.2s ease-in-out infinite alternate;--a:-2deg;--b:4deg}
+.c-pinscher.act-beg .root{transform:rotate(-14deg) translate(-6px,-14px);transition:transform .3s}
+.c-pinscher.act-beg .pupils,.c-pinscher.act-eat .pupils{display:none}
+.c-pinscher.act-fetch .root{animation:bob .25s ease-in-out infinite;--y:-6px}
+.c-pinscher.act-eat .head{animation:bob .3s ease-in-out infinite;--y:2px}
+.c-pinscher.walking.act-bark .root,.c-pinscher.walking.act-fetch .root{animation:waddle .14s ease-in-out infinite alternate!important}`,
   actions: [
-    { id: 'struggle', dur: 4.5, hide: ['d-mouth'], say: ['¡¿POR QUÉ NO SALE ESTE BULÓN?! 😤', 'Grrr… ¡este M24 me tiene podrido!'] },
+    { id: 'struggle', dur: 4.5, home: true, hide: ['d-mouth'], say: ['¡¿POR QUÉ NO SALE ESTE BULÓN?! 😤', 'Grrr… ¡este M24 me tiene podrido!'] },
     { id: 'bark', dur: 3.2, hide: ['d-mouth'], say: ['¡GUAU! ¡Que alguien traiga el aflojatodo!', '¡GUAU GUAU! ¡Así no se puede trabajar!'] },
-    { id: 'kick', dur: 3.2, say: ['¡Ay, ay, ay! Mi patita…', 'La patada técnica no funcionó'] },
+    { id: 'kick', dur: 3.2, home: true, say: ['¡Ay, ay, ay! Mi patita…', 'La patada técnica no funcionó'] },
     { id: 'throw', dur: 2.3, say: ['¡Me rindo! …no, no me rindo', 'Llave al aire… ¡y me volvió!'] },
     { id: 'tremble', dur: 3.5, say: ['Faltan {d} días y este bulón sigue trabado… 😰', 'Estoy tranquilo. TRANQUILO. 😬'] },
     { id: 'snap', scene: true, hide: ['d-mouth'] },
     { id: 'dizzy', scene: true, hide: ['d-mouth'] },
-    { id: 'win', dur: 4.6, hide: ['d-bolt', 'd-mouth'], say: ['¡SALIÓ! ¡Soy el mejor técnico del taller! 🏆', '¡Bulón vencido! Ahora sí, que venga el aguinaldo'] },
+    { id: 'chase', dur: 3.2, say: ['¡Esta cola me persigue hace años! 🌀', '¡Quieta, cola! ¡QUIETA!'] },
+    { id: 'dig', dur: 3.6, say: ['¡Seguro el bulón de repuesto está enterrado acá! 🕳️', 'Excavando… el aguinaldo tiene que estar por algún lado'] },
+    { id: 'growl', dur: 3.2, hide: ['d-mouth'], say: ['Grrr… nadie toca mi bulón M24', 'Te estoy vigilando… grrr 👀'] },
+    { id: 'sniff', dur: 3.6, say: ['Sniff sniff… huele a aguinaldo 👃', 'Sniff… acá pasó el ratón, seguro'] },
+    { id: 'beg', dur: 3.4, hide: ['d-mouth'], say: ['¿Una galletita? ¿Aunque sea una? 🥺', 'Prometo portarme bien hasta el 15 🥺'] },
+    { id: 'fetch', scene: true, hide: ['d-mouth'] },
+    { id: 'eat', scene: true, hide: ['d-mouth'] },
+    { id: 'win', dur: 4.6, home: true, hide: ['d-mouth'], say: ['¡SALIÓ! ¡Soy el mejor técnico del taller! 🏆', '¡Bulón vencido! Ahora sí, que venga el aguinaldo'] },
   ],
 };
 
@@ -687,6 +737,10 @@ const pig = {
     ${popTxt(250, 70, '¡TOC TOC!', 18, '#ffd23f', 0.6)}
   </g>
   <g class="A a-angry">${puff(112, 50, 3, 'rgba(240,240,240,.9)', -50)}</g>
+  <g class="A a-phone">
+    ${limb('M152 168 Q166 140 146 110', PIG, 16)}<rect x="136" y="88" width="18" height="34" rx="4" fill="#222831" ${ol(3)}/><rect x="139" y="92" width="12" height="18" fill="#4fc3ff"/>
+    ${floatTxt(186, 70, '?', 26, '#ffd23f', 1.4, 0, 10, -40)}
+  </g>
   <g class="A a-sweep">
     <g ${S('112 170', 'osc .45s ease-in-out infinite alternate', '--a:-16deg;--b:14deg')}>
       <path d="M86 148 L176 222" stroke="${O}" stroke-width="10" stroke-linecap="round"/><path d="M86 148 L176 222" stroke="#a0622d" stroke-width="5" stroke-linecap="round"/>
@@ -711,6 +765,7 @@ const pig = {
 .c-pig.act-sweep .root{animation:osc .9s ease-in-out infinite alternate;--a:-3deg;--b:3deg}
 .c-pig.act-dream .head{animation:osc 1.6s ease-in-out infinite alternate;--a:-5deg;--b:5deg}
 .c-pig.act-angry .root{animation:jit .08s infinite}
+.c-pig.act-phone .head{transform:rotate(10deg);transition:transform .4s}
 .c-pig.no-chipa .chipa-ring{display:none}`,
   actions: [
     { id: 'oil', dur: 4.5, hide: ['d-ar'], say: ['Un poquito de aceite y el reloj anda como seda', 'Lubricación al día ✔'] },
@@ -718,6 +773,7 @@ const pig = {
     { id: 'chipa', dur: 4, hide: ['d-al', 'd-ar', 'd-eyes'], say: ['Chipa calentita… el aguinaldo puede esperar. ¡NO, no puede!', 'Merienda reglamentaria: chipa y cocido'] },
     { id: 'gauge', dur: 4, hide: ['d-ar'], say: ['Presión OK. Mi presión no: falta el aguinaldo', 'Toc toc… ¿se trabó la aguja o es mi vista?'] },
     { id: 'sweep', dur: 4, hide: ['d-al', 'd-ar'], say: ['5S: orden y limpieza, che 🧹', 'Taller limpio, taller feliz'] },
+    { id: 'phone', dur: 4, hide: ['d-ar'], say: ['¿Hola, banco? ¿Ya depositaron el aguinaldo? 📞', 'Sí, sigo esperando… música de espera otra vez 🎵'] },
     { id: 'angry', scene: true, hide: ['d-mouth'] },
     { id: 'dream', dur: 4.5, hide: ['d-eyes'], say: ['Soñando con los guaraníes del aguinaldo 💸', 'Con el aguinaldo me compro… ¡una chipa más grande!'] },
   ],
@@ -795,6 +851,7 @@ const mouse = {
     <g class="A a-loot-star"><circle cx="92" cy="62" r="34" fill="rgba(255,210,63,.35)" style="animation:flick .5s infinite"/>${star(92, 62, 28)}</g>
     <g class="A a-loot-bolt"><rect x="60" y="66" width="72" height="14" rx="3" fill="#c7ced6" ${ol(3)}/>${hex(56, 73, 17)}</g>
     <g class="A a-loot-gear"><path d="${gearPath(92, 68, 24, 10, 9)}" fill="#c9a227" fill-rule="evenodd" ${ol(3)}/></g>
+    <g class="A a-cheese">${limb('M74 146 Q84 136 96 132', MG, 10)}${limb('M106 146 Q112 136 108 128', MG, 10)}<path d="M92 110 L126 124 L92 138 Z" fill="#ffd23f" ${ol(3)}/><circle cx="102" cy="122" r="3" fill="#e0a800"/><circle cx="110" cy="128" r="2.5" fill="#e0a800"/>${[0, 0.4].map((d) => `<circle cx="104" cy="140" r="2.5" fill="#ffd23f" ${S('104 140', `drip .8s ${d}s ease-in infinite both`, '--y:46px')}/>`).join('')}</g>
     <g class="A a-run"><g class="runlegs">${limb('M82 184 L72 192', MG, 7)}${limb('M100 184 L112 192', MG, 7)}</g></g>
   </g>
 </g>`,
@@ -811,6 +868,7 @@ const mouse = {
 .c-mouse.act-peek .head{animation:osc .9s 1.6s ease-in-out infinite alternate;--a:-12deg;--b:12deg}
 .c-mouse.act-salute .root{transform:scaleY(1.05)}
 .c-mouse.act-grab .root{transform:scale(1.06,.86)}
+.c-mouse.act-cheese .head{animation:bob .2s ease-in-out infinite;--y:2px}
 .c-mouse[class*="act-loot"] .root{animation:bob .2s ease-in-out infinite;--y:-5px}
 .c-mouse.walking[class*="act-loot"] .root{animation:waddle .16s ease-in-out infinite alternate!important}`,
   actions: [
@@ -820,6 +878,7 @@ const mouse = {
     { id: 'tablet', dur: 4.2, hide: ['d-al', 'd-ar'], say: ['Cargando la OT en el sistema… 98%… 99%…', 'Notificación cerrada. Ahora sí, a esperar el 15'] },
     { id: 'peek', dur: 4.6, home: true, say: ['¿Ya es 15? ¿No? Ok, sigo trabajando', '¿Faltan {d} días? Vuelvo después…'] },
     { id: 'salute', dur: 3.5, hide: ['d-ar'], say: ['¡Todo listo, jefe! 🫡', 'Ratón de mantenimiento reportándose'] },
+    { id: 'cheese', dur: 3.6, hide: ['d-al', 'd-ar'], say: ['Queso Paraguay de contrabando 🧀', 'Ñam… el mejor repuesto es el queso'] },
     { id: 'grab', scene: true, hide: ['d-al', 'd-ar'] },
     ...['chipa', 'wrench', 'star', 'bolt', 'gear'].map((k) => ({ id: 'loot-' + k, scene: true, hide: ['d-al', 'd-ar'] })),
   ],

@@ -279,7 +279,7 @@ class Actor {
       this.setLayer('front');
       await this.moveTo(s.x, s.y, { mode: 'leap', arc: 160 + Math.random() * 140 });
     } else if (t === 'walk' || t === 'ride') {
-      await this.moveTo(s.x, s.y, { mode: t });
+      await this.moveTo(s.x, s.y, { mode: t, speed: this.def.walkSpeed });
     } else {
       const cur = this.spot || this.spots[0];
       if (cur && cur.level !== s.level) {
@@ -362,6 +362,7 @@ class Actor {
         await this.travelTo(pick(others));
       }
       if (this.def.id === 'mouse' && Math.random() < (this.def.tripChance || 0)) { await mouseHeist(this); continue; }
+      if (this.def.id === 'pinscher' && Math.random() < (this.def.tripChance || 0)) { await zoomies(this); continue; }
       const a = this.act(this.nextAction().id);
       if (a.say && Math.random() < 0.7) setTimeout(() => this.say(pick(a.say), Math.min(3400, a.dur * 1000 - 400)), 350);
       await sleep(a.dur * 1000);
@@ -399,6 +400,17 @@ async function mouseHeist(m) {
   await m.travelTo(to);
   m.act(null);
   await sleep(500);
+}
+
+/* ---------------- El pinscher con "zoomies": corre como loco por todo el piso ---------------- */
+async function zoomies(p) {
+  p.act('bark');
+  p.say(pick(['¡ZOOMIES! 🐕💨', '¡No puedo parar! ¡Mucha energía!', '¡Nervios de fin de año! 😵']), 2400);
+  for (const x of [300, 1650, 520, 1400]) await p.moveTo(x, FLOOR, { mode: 'run', speed: 1.3 });
+  p.act('chase'); await sleep(1600);
+  p.act(null);
+  await p.moveTo(p.st.x, FLOOR, { mode: 'walk', speed: 0.7 });
+  p.spot = p.spots[0];
 }
 
 /* ---------------- Escenas con varios animales ---------------- */
@@ -567,6 +579,189 @@ const SCENES = [
       K.act('flip'); await sleep(2400);
       peel.remove(); K.act(null); G.act(null);
       await Promise.all([K.exit(), sleep(500).then(() => G.exit())]);
+    },
+  },
+  {
+    // 7) El pinscher persigue la bici del conejo
+    cast: ['pinscher', 'rabbit'],
+    async run() {
+      const P = A.pinscher, R = A.rabbit;
+      await P.enter(); P.act('sniff');
+      await R.enter();
+      R.act('bell'); R.say('¡Riiing! Permiso, perrito 🚲', 2400, true);
+      P.act('growl'); await sleep(2400);
+      P.act('bark'); P.say('¡GUAU! ¡Esa bici me provoca!', 2400, true);
+      R.act(null); await sleep(600);
+      await Promise.all([R.moveTo(2200, FLOOR, { mode: 'ride', speed: 0.9 }), sleep(300).then(() => P.moveTo(2120, FLOOR, { mode: 'run', speed: 0.85 }))]);
+      R.resetHome();
+      await sleep(1200);
+      P.act(null); await P.moveTo(P.st.x, FLOOR, { mode: 'walk' });
+      P.act('tremble'); P.say('Uf… casi la alcanzo 😮‍💨', 2600, true);
+      await sleep(2800); P.act(null); await P.exit();
+    },
+  },
+  {
+    // 8) El mono juega a "buscá la pelota" con el pinscher… con trampa
+    cast: ['monkey', 'pinscher'],
+    async run() {
+      const K = A.monkey, P = A.pinscher;
+      await Promise.all([come(K, 900, FLOOR), P.enter()]);
+      K.act('juggle'); K.say('¿Jugamos, perrito? ¡Buscá el hueso! 🦴', 2600, true);
+      P.act('beg'); await sleep(2600);
+      const bone = document.createElement('div');
+      bone.className = 'peel'; bone.textContent = '🦴';
+      Object.assign(bone.style, { left: K.x + 'px', top: K.y - 200 + 'px' });
+      fxLayer.appendChild(bone);
+      K.act('laugh');
+      await bone.animate([{ transform: 'translate(0,0) rotate(0)' }, { transform: 'translate(-280px,-200px) rotate(400deg)', offset: 0.5 }, { transform: 'translate(-560px,150px) rotate(800deg)' }], { duration: 1100, easing: 'ease-out' }).finished;
+      bone.style.transform = 'translate(-560px,150px)';
+      P.act('bark');
+      await P.moveTo(K.x - 520, FLOOR, { mode: 'run', speed: 0.9 });
+      bone.remove(); P.act('fetch');
+      await P.moveTo(K.x - 140, FLOOR, { mode: 'run', speed: 0.8 });
+      K.act('chest'); K.say('¡Bien! ¡Otra vez! Ahora más lejos… 😏', 2400, true);
+      await sleep(1800);
+      P.act('beg'); K.act('laugh');
+      fxLayer.appendChild(bone); bone.style.transform = '';
+      await bone.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-1200px,-300px) rotate(900deg)' }], { duration: 1000, easing: 'ease-out' }).finished;
+      bone.remove();
+      P.act('bark'); await P.moveTo(-200, FLOOR, { mode: 'run', speed: 1 });
+      K.say('¡JAJAJA! Esa no vuelve más 🐒', 2600, true);
+      await sleep(2600);
+      P.place(2100, FLOOR); P.act('fetch');
+      await P.moveTo(K.x + 160, FLOOR, { mode: 'run', speed: 1 });
+      P.act('growl'); P.say('Di la vuelta al mundo. ¡Acá está tu hueso! 😎', 2800, true);
+      K.act('flip'); K.say('¡¿CÓMO?! 😱', 2200, true);
+      await sleep(2800);
+      K.act(null); P.act(null);
+      await Promise.all([K.exit(), P.exit()]);
+    },
+  },
+  {
+    // 9) Las chispas del oso asustan al pinscher, que se esconde detrás del tanque
+    cast: ['bear', 'pinscher'],
+    async run() {
+      const O = A.bear, P = A.pinscher;
+      await O.enter(); O.act('weld');
+      await P.enter(); await P.moveTo(760, FLOOR, { mode: 'walk', speed: 0.6 });
+      P.act('growl'); P.say('¡Grrr! ¡Esas luces me atacan!', 2600, true);
+      await sleep(2600);
+      P.act('bark'); await sleep(1400);
+      P.act(null); await P.moveTo(200, FLOOR, { mode: 'run', speed: 1 });
+      P.act('tremble'); P.say('Desde acá estoy más seguro… 😰', 2600, true);
+      await sleep(2000);
+      O.act('terere'); O.say('Tranquilo, che, son chispas nomás. ¿Un tereré? 🧉', 3000, true);
+      await sleep(3000);
+      P.act(null); await P.moveTo(620, FLOOR, { mode: 'walk', speed: 0.5 });
+      P.act('beg'); P.say('Bueno… pero con yuyito 🥺', 2600, true);
+      await sleep(2800);
+      O.act(null); P.act(null);
+      await Promise.all([O.exit(), P.exit()]);
+    },
+  },
+  {
+    // 10) El pinscher le ladra a la escalera del pato
+    cast: ['duck', 'pinscher'],
+    async run() {
+      const D = A.duck, P = A.pinscher;
+      await D.enter(); D.act('change'); D.say('Cambiando la lámpara… concentración total ⛑️', 2600, true);
+      await P.enter(); await P.moveTo(1500, FLOOR, { mode: 'walk', speed: 0.7 });
+      P.act('bark'); P.say('¡GUAU! ¿Qué hacés ahí arriba?', 2400, true);
+      await sleep(1600);
+      D.act('wobble'); D.say('¡CUAC! ¡No me muevas la escalera!', 2600, true);
+      P.act('chase'); await sleep(3200);
+      D.act(null); P.act('tremble');
+      await sleep(1400);
+      D.act('quack'); D.say('Perro maleducado… 😤', 2400, true);
+      P.act('beg'); P.say('Perdón, señor pato 🥺', 2400, true);
+      await sleep(2800);
+      D.act(null); P.act(null);
+      await Promise.all([D.exit(), P.exit()]);
+    },
+  },
+  {
+    // 11) El chanchito le convida chipa al pinscher
+    cast: ['pig', 'pinscher'],
+    async run() {
+      const G = A.pig, P = A.pinscher;
+      await G.enter(); G.act('chipa');
+      await P.enter(); await P.moveTo(870, FLOOR, { mode: 'walk', speed: 0.6 });
+      P.act('sniff'); P.say('Sniff sniff… ¿eso es chipa? 👃', 2400, true);
+      await sleep(2400);
+      P.act('beg'); P.say('¿Me convidás un pedacito? 🥺', 2600, true);
+      await sleep(2600);
+      G.act('dream'); G.say('Bueno… tomá, que es Navidad 🎄', 2600, true);
+      await sleep(1200);
+      P.act('eat'); P.say('¡Al fin algo bueno hoy! ❤️', 2800, true);
+      await sleep(3000);
+      G.act(null); P.act('chase');
+      await sleep(2000); P.act(null);
+      await Promise.all([G.exit(), P.exit()]);
+    },
+  },
+  {
+    // 12) El ratón provoca al pinscher y se escapa al panel
+    cast: ['mouse', 'pinscher'],
+    async run() {
+      const M = A.mouse, P = A.pinscher;
+      await P.enter(); P.act('dig');
+      await come(M, 980, FLOOR);
+      M.act('salute'); M.say('¡Atrapame si podés, perrito! 😜', 2600, true);
+      await sleep(1600);
+      P.act('bark'); P.say('¡GRRR! ¡VENÍ ACÁ!', 2000, true);
+      M.act(null);
+      await Promise.all([M.moveTo(-160, FLOOR, { mode: 'run', speed: 1.1 }), sleep(400).then(() => P.moveTo(-180, FLOOR, { mode: 'run', speed: 0.95 }))]);
+      await sleep(900);
+      M.place(2060, FLOOR); P.place(2250, FLOOR);
+      await Promise.all([M.moveTo(1320, FLOOR, { mode: 'run', speed: 1.1 }), P.moveTo(1500, FLOOR, { mode: 'run', speed: 0.95 })]);
+      await M.moveTo(1320, 238, { mode: 'jump', arc: 220, speed: 0.8 }); M.setLayer('back'); M.spot = { level: 'top', x: 1320, y: 238 };
+      P.act('growl'); P.say('¡Bajá si sos valiente!', 2600, true);
+      M.act('cheese'); M.say('Desde acá arriba se ve todo… ñam 🧀', 2600, true);
+      await sleep(3000);
+      P.act('chase'); P.say('Me mareé de tanto correr… 😵‍💫', 2400, true);
+      await sleep(2400);
+      M.act('salute'); M.say('¡Bye bye! 👋', 1800, true); await sleep(1600);
+      M.act(null); P.act(null);
+      await Promise.all([M.exit(), P.exit()]);
+    },
+  },
+  {
+    // 13) Duelo de malabares: pulpo contra mono
+    cast: ['octo', 'monkey'],
+    async run() {
+      const Oc = A.octo, K = A.monkey;
+      await Oc.enter(); await come(K, 420, FLOOR);
+      K.act('juggle'); K.say('¡Malabares con 3 llaves! ¿Quién da más? 🐒', 2600, true);
+      await sleep(2600);
+      Oc.act('juggle'); Oc.say('Ja… yo con 8 brazos podría hacer 20 🐙', 2800, true);
+      await sleep(2800);
+      K.act('flip'); K.say('¡Pero no sabés hacer esto! 🤸', 2400, true);
+      await sleep(2400);
+      Oc.act('ink'); Oc.say('¡Uy! ¡Me ganó la emoción! 😳', 2400, true);
+      K.act('laugh'); await sleep(2600);
+      Oc.act('wave'); K.act('chest'); await sleep(2000);
+      Oc.act(null); K.act(null);
+      await Promise.all([Oc.exit(), K.exit()]);
+    },
+  },
+  {
+    // 14) El loro inspecciona la seguridad del pato
+    cast: ['parrot', 'duck'],
+    async run() {
+      const L = A.parrot, D = A.duck;
+      await D.enter(); D.act('change');
+      await come(L, 1680, 405);
+      L.act('supervise'); L.say('Inspección: ¿arnés de seguridad para trabajo en altura? 📋', 3000, true);
+      await sleep(3000);
+      D.act('wobble'); D.say('¡Ups! ¡CUAC! Ya bajo y me lo pongo', 2600, true);
+      await sleep(2600);
+      D.act(null); await sleep(1200);
+      D.act('quack'); L.act('talk'); L.say('Anotado: el pato cumple ✔ ¡Bien ahí!', 2600, true);
+      await sleep(2800);
+      D.act('coffee'); L.act('dance'); L.say('¡Cocido para todos! ☕', 2400, true);
+      await sleep(2600);
+      L.act(null); D.act(null);
+      await Promise.all([L.exit(), D.exit()]);
     },
   },
 ];
@@ -834,7 +1029,7 @@ const director = {
         this.nextBreakdown = now + 5000;
       }
       if (now > this.nextScene) {
-        if (await this.scene()) this.nextScene = now + rnd(28000, 45000);
+        if (await this.scene()) this.nextScene = now + rnd(20000, 34000);
         else this.nextScene = now + 4000;
       }
       if (Math.random() < 0.08) this.target = 2 + Math.floor(Math.random() * 4); // entre 2 y 5 a la vez

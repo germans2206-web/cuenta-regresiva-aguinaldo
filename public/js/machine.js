@@ -269,6 +269,19 @@ export function buildMachine(svg, frontSvg) {
   el('polygon', { points: sp.join(' '), fill: '#ffd23f', stroke: OL, 'stroke-width': 4 }, star).style.filter = 'drop-shadow(0 0 12px #ffd23f)';
   el('rect', { x: 1806, y: 1050, width: 48, height: 22, fill: '#7a4a2a', stroke: OL, 'stroke-width': 3 }, tree);
 
+  // Máquina con el bulón M24 (el pinscher pelea con él)
+  const blk = el('g', { id: 'm24block' }, svg);
+  blk.style.transformBox = 'view-box'; blk.style.transformOrigin = '1428px 1046px';
+  el('rect', { x: 1376, y: 910, width: 104, height: 136, rx: 6, fill: '#59616d', stroke: OL, 'stroke-width': 4 }, blk);
+  el('rect', { x: 1376, y: 910, width: 104, height: 14, fill: '#ffc21a', stroke: OL, 'stroke-width': 3 }, blk);
+  [[1388, 936], [1468, 936], [1388, 1034], [1468, 1034]].forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 4, fill: '#9aa3ad' }, blk));
+  el('rect', { x: 1426, y: 1004, width: 40, height: 18, rx: 3, fill: '#e2283b', stroke: OL, 'stroke-width': 2 }, blk);
+  const mt = el('text', { x: 1446, y: 1017, 'text-anchor': 'middle', 'font-family': 'Chakra Petch', 'font-weight': 700, 'font-size': 10, fill: '#fff' }, blk); mt.textContent = 'M24';
+  const bolt = el('g', { id: 'm24bolt' }, blk);
+  const bp = []; for (let i = 0; i < 6; i++) { const a = (Math.PI / 3) * i; bp.push(`${(1412 + Math.cos(a) * 22).toFixed(1)},${(970 + Math.sin(a) * 22).toFixed(1)}`); }
+  el('polygon', { points: bp.join(' '), fill: '#c7ced6', stroke: OL, 'stroke-width': 3 }, bolt);
+  el('circle', { cx: 1412, cy: 970, r: 8.8, fill: '#59616d', stroke: OL, 'stroke-width': 2 }, bolt);
+
   // ---------- Elementos al frente ----------
   const f = frontSvg;
   el('rect', { x: 0, y: 1046, width: 1920, height: 40, fill: 'url(#floorG)' }, f);
