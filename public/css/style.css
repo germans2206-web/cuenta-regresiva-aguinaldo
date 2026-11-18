@@ -332,3 +332,6 @@ html, body { background: radial-gradient(120% 90% at 50% 40%, #13243d 0%, #0a142
 #charsFront .char { z-index: 10; }
 #darkness { z-index: 11; }
 .beacon { z-index: 12; }
+
+/* Sin la placa superior: el título baja un poco para quedar centrado en la esfera */
+.faltan { margin-top: 26px; }

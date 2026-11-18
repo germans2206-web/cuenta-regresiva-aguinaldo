@@ -35,7 +35,7 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
 ## Parámetros de URL
 - `?fecha=2026-12-15T08:00` → cambia la fecha/hora objetivo (hora de Paraguay).
 - `?demo=20` → prueba: la cuenta llega a cero en 20 segundos.
-- `?escena=0` … `?escena=25` (15–17: préstamos "hasta que cobre el aguinaldo"; 18–25: trabajos en pareja y mantenimientos programados) → muestra una escena entre animales puntual.
+- `?escena=0` … `?escena=31` (26–31: chistes del caso Ueno) (15–17: préstamos "hasta que cobre el aguinaldo"; 18–25: trabajos en pareja) → muestra una escena entre animales puntual.
 - `?parada=0` … `?parada=2` → muestra una parada puntual (perno robado, apagón, atasco).
 
 ## Desarrollo y despliegue (Cloudflare Workers – Static Assets)

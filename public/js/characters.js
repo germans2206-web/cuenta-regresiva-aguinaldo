@@ -1047,7 +1047,7 @@ const parrot = {
 .c-parrot.flying .wing{animation:flap .13s ease-in-out infinite alternate}`,
   actions: [
     { id: 'lockout', dur: 4, hide: ['d-wing'], say: ['Bloqueo y etiquetado: ¡nadie toca esta máquina! 🔒', 'Candado puesto. Primero la seguridad, después el aguinaldo 🦜'] },
-    { id: 'talk', dur: 3.6, say: ['¡Aguinaldo! ¡Aguinaldo! 🦜', '¡Faltan {d} días! ¡{d} días! ¡{d} DÍAS!', '¡Lorito quiere aguinaldo… en efectivo! 💵', '¡Billete en mano! ¡Nada de apps raras! 🦜'] },
+    { id: 'talk', dur: 3.6, say: ['¡Aguinaldo! ¡Aguinaldo! 🦜', '¡Faltan {d} días! ¡{d} días! ¡{d} DÍAS!', '¡Lorito quiere aguinaldo… en efectivo! 💵', '¡Peña no cobra aguinaldo! ¡Peña no cobra! 🦜', '¡Billete en mano! ¡Nada de apps raras! 🦜'] },
     { id: 'supervise', dur: 4.2, hide: ['d-wing'], say: ['Inspección de seguridad: ¿casco puesto? ✔', 'Anotando quién llega tarde… 📋', 'Permiso de trabajo en altura: firmado ✍️'] },
     { id: 'radio', dur: 4.2, hide: ['d-wing'], say: ['Taller a central: ¿cuándo cae el aguinaldo? Cambio 📻', 'Central dice: el 15. Cambio y fuera'] },
     { id: 'whistle', dur: 3.6, say: ['Fiu fiuuu… ¡a trabajar, gente! 🎵', 'Fiu fiu… ¿ese pinscher sigue con el bulón?'] },

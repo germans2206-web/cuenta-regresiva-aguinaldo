@@ -123,7 +123,12 @@ const MESSAGES = [
   'CONSEJO DEL TALLER: EL AGUINALDO, BIEN GUARDADITO EN EL COLCHÓN 🛏️',
   'EL CHANCHITO SIGUE EN ESPERA CON EL BANCO: VA POR LA SEMANA 3 📞',
   'SE BUSCA: BANCO QUE ABRA, ATIENDA Y DEVUELVA 😅',
-  '¡FELIZ NAVIDAD, EQUIPO DE MANTENIMIENTO! 🎄',
+  '¿QUIÉN NO COBRA AGUINALDO ESTE AÑO? PISTA: HASTA HACE POCO ERA PRESIDENTE 😅',
+  'ÚLTIMO MOMENTO: EL COLCHÓN SUPERA A UENO EN SOLIDEZ BANCARIA 🛏️',
+  'CONSEJO DEL TALLER: AGUINALDO EN MANO, NADA DE UENO 😅',
+  'EL ÚNICO AUTO DE LUJO DEL TALLER ES LA BICI DEL CONEJO 🚲',
+  'SANTIAGO PEÑA NO COBRA AGUINALDO ESTE AÑO… NOSOTROS SÍ 💪',
+  'EL BULÓN M24 Y LA PLATA DE UENO: NADIE LOS PUEDE SACAR 🔩',
 ];
 const ALARM = ['⚠ PARADA DE EMERGENCIA — RELOJ DETENIDO ⚠', 'TODO EL EQUIPO DE MANTENIMIENTO AL TALLER', '⚠ NO SE PREOCUPEN: EL AGUINALDO SIGUE EN PIE ⚠'];
 let tickerAlarm = false, tickerAnim = null;
@@ -1039,6 +1044,125 @@ const SCENES = [
       D.act('coffee'); await sleep(3000);
       G.act(null); D.act(null);
       await Promise.all([G.exit(), D.exit()]);
+    },
+  },
+  {
+    // 26) ¿Sabés quién no va a cobrar aguinaldo este año?
+    cast: ['parrot', 'bear'],
+    async run() {
+      const L = A.parrot, O = A.bear;
+      await O.enter(); await come(L, 205, 456);
+      O.act('terere');
+      L.act('talk'); L.say('Oso… ¿sabés quién NO va a cobrar aguinaldo este año? 🦜', 3000, true);
+      await sleep(3000);
+      O.act('watch'); O.say('¿Quién? 🤔', 1800, true);
+      await sleep(1900);
+      L.act('snitch'); L.say('¡SANTIAGO PEÑA! 🦜', 2400, true);
+      await sleep(1200);
+      O.act('dance'); O.say('¡JAJAJAJA! Ni él ni su banco amigo 😂', 3000, true);
+      L.act('dance'); await sleep(3400);
+      L.say('¡Este año el aguinaldo es para los que laburan! 💪', 2800, true);
+      await sleep(3000);
+      L.act(null); O.act(null);
+      await Promise.all([L.exit(), O.exit()]);
+    },
+  },
+  {
+    // 27) ¿Dónde NO vas a depositar el aguinaldo?
+    cast: ['monkey', 'pig'],
+    async run() {
+      const K = A.monkey, G = A.pig;
+      await G.enter(); await come(K, 900, FLOOR);
+      G.act('dream'); G.say('Ya estoy planeando dónde guardar el aguinaldo 💸', 2800, true);
+      await sleep(2800);
+      K.act('banana'); K.say('¿Sabés dónde seguro NO lo vas a depositar? 🍌', 2800, true);
+      await sleep(2800);
+      G.act('phone'); G.say('¿Dónde? 🐷', 1800, true);
+      await sleep(1900);
+      K.act('chest'); K.say('¡EN UENO! 🐒', 2200, true);
+      await sleep(1200);
+      G.act('angry'); G.say('¡Ni loco! Yo soy chanchito: ¡alcancía y colchón! 🐷🛏️', 3000, true);
+      K.act('laugh'); await sleep(3400);
+      K.act(null); G.act(null);
+      await Promise.all([K.exit(), G.exit()]);
+    },
+  },
+  {
+    // 28) ¿Qué tienen en común el bulón M24 y la plata de ueno?
+    cast: ['octo', 'pinscher'],
+    async run() {
+      const Oc = A.octo, P = A.pinscher;
+      await Promise.all([Oc.enter(), P.enter()]);
+      P.act('struggle'); P.say('¡Este bulón no sale ni a palos! 😤', 2600, true);
+      await sleep(2600);
+      Oc.act('wave'); Oc.say('¿Sabés qué tiene en común tu bulón con la plata de ueno? 🐙', 3000, true);
+      await sleep(3000);
+      P.act('growl'); P.say('¿Qué? 😠', 1800, true);
+      await sleep(1900);
+      Oc.act('juggle'); Oc.say('¡Que nadie los puede sacar! 😂', 2600, true);
+      await sleep(1400);
+      P.act('chase'); P.say('Jaja… ¡no me da risa! …bueno, un poquito 🌀', 2800, true);
+      await sleep(3000);
+      Oc.act(null); P.act(null);
+      await Promise.all([Oc.exit(), P.exit()]);
+    },
+  },
+  {
+    // 29) El único auto de lujo del taller
+    cast: ['rabbit', 'mouse'],
+    async run() {
+      const R = A.rabbit, M = A.mouse;
+      await come(M, 860, FLOOR);
+      M.act('tablet'); M.say('Che, la fiscalía secuestró los autos de lujo del dueño de ueno 📰', 3000, true);
+      await sleep(3000);
+      await R.enter();
+      R.act('bell'); R.say('¡Riiing! ¿Y a mí cuándo me secuestran la bici? 🚲', 2800, true);
+      await sleep(2800);
+      M.act('salute'); M.say('Tranquilo: con un aguinaldo de taller nadie se compra un Bentley 😂', 3200, true);
+      await sleep(3200);
+      R.act('wheelie'); R.say('¡Mi bici es 100% mía y sin sobregiros! 😎', 2800, true);
+      await sleep(3000);
+      R.act(null); M.act(null);
+      await Promise.all([R.exit(), M.exit()]);
+    },
+  },
+  {
+    // 30) El colchón, el banco más sólido del país
+    cast: ['duck', 'bird'],
+    async run() {
+      const D = A.duck, B = A.bird;
+      await D.enter(); await come(B, 1440, lightsY(1440) + 6);
+      D.act('coffee'); D.say('Mi aguinaldo va directo al colchón 🛏️', 2600, true);
+      await sleep(2600);
+      B.act('sing'); B.say('¿Por qué al colchón, pato? 🐦', 2200, true);
+      await sleep(2300);
+      D.act('quack'); D.say('¡Porque al colchón nunca lo intervino el Banco Central! 🦆', 3200, true);
+      await sleep(1500);
+      B.act('balance'); B.say('¡JAJA! ¡Me caigo del cable! 😂', 2600, true);
+      await sleep(3000);
+      D.act('trip'); D.say('…ni yo de la risa ¡CUAC! 💥', 2600, true);
+      await sleep(3200);
+      D.act(null); B.act(null);
+      await Promise.all([D.exit(), B.exit()]);
+    },
+  },
+  {
+    // 31) Ex presidente desocupado
+    cast: ['parrot', 'monkey'],
+    async run() {
+      const L = A.parrot, K = A.monkey;
+      await come(L, 1150, 238); await come(K, 1320, 238);
+      K.act('selfie'); K.say('Che loro, ¿viste que en el taller necesitan un ayudante? 🤳', 3000, true);
+      await sleep(3000);
+      L.act('supervise'); L.say('Sí… y ya se postuló un ex presidente con experiencia en bancos 📋', 3200, true);
+      await sleep(3200);
+      K.act('laugh'); K.say('¡JAJAJA! ¿Y qué experiencia? 😂', 2400, true);
+      await sleep(2400);
+      L.act('talk'); L.say('Ninguna: los bancos que conoce… ¡cierran! 🦜', 2800, true);
+      await sleep(1500);
+      K.act('flip'); await sleep(2400);
+      K.act(null); L.act(null);
+      await Promise.all([K.exit(), L.exit()]);
     },
   },
 ];
