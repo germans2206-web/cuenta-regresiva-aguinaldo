@@ -232,6 +232,93 @@ function steamPuffs(x, y, parent, n = 3) {
   }
 }
 
+
+// ---------- Toque industrial (misma paleta: grafito, oro y un amarillo de seguridad muy medido) ----------
+const SAFETY = '#d9a62e';
+function rivetRow(x1, y1, x2, y2, n, parent, r = 3) {
+  for (let i = 0; i <= n; i++) {
+    const x = x1 + ((x2 - x1) * i) / n, y = y1 + ((y2 - y1) * i) / n;
+    el('circle', { cx: x, cy: y, r, fill: '#56637a', stroke: '#0b1220', 'stroke-width': 1 }, parent);
+    el('circle', { cx: x - r * 0.3, cy: y - r * 0.3, r: r * 0.35, fill: 'rgba(255,255,255,.35)' }, parent);
+  }
+}
+function industrial(svg) {
+  const g = el('g', { id: 'industrial' }, svg);
+  // Cercha superior (detrás del cartel)
+  el('rect', { x: -400, y: 4, width: 2720, height: 86, fill: '#151d2b', stroke: '#05090f', 'stroke-width': 2 }, g);
+  for (let x = -400; x < 2320; x += 80) {
+    el('path', { d: `M${x} 86 L${x + 40} 8 L${x + 80} 86`, fill: 'none', stroke: '#2a3548', 'stroke-width': 6 }, g);
+  }
+  el('rect', { x: -400, y: 4, width: 2720, height: 8, fill: '#2a3548' }, g);
+  el('rect', { x: -400, y: 82, width: 2720, height: 8, fill: '#2a3548' }, g);
+  rivetRow(-380, 86, 2300, 86, 68, g, 2.6);
+  // Columnas laterales de perfil doble T con remaches y riostras
+  [[0, 1], [1920, -1]].forEach(([x0, s]) => {
+    const x = s > 0 ? x0 - 400 : x0;
+    el('rect', { x, y: 0, width: 436, height: 1046, fill: '#1a2333', stroke: '#05090f', 'stroke-width': 2 }, g);
+    const inner = s > 0 ? 30 : 1890;
+    el('rect', { x: inner, y: 0, width: 6, height: 1046, fill: '#2f3b50' }, g);
+    rivetRow(s > 0 ? 18 : 1902, 110, s > 0 ? 18 : 1902, 1020, 26, g, 3);
+    el('path', { d: s > 0 ? 'M36 90 L120 4' : 'M1884 90 L1800 4', stroke: '#2a3548', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+    // franja de seguridad discreta al pie de la columna
+    for (let k = 0; k < 6; k++) el('path', { d: `M${s > 0 ? 0 : 1884} ${960 + k * 16} l36 -16 l0 8 l-36 16 z`, fill: SAFETY, opacity: 0.55 }, g);
+  });
+  // Pistón hidráulico (izquierda)
+  const ps = el('g', {}, g);
+  el('rect', { x: 46, y: 392, width: 40, height: 150, rx: 6, fill: '#26303f', stroke: '#05090f', 'stroke-width': 2 }, ps);
+  [410, 520].forEach((y) => el('rect', { x: 42, y, width: 48, height: 10, rx: 3, fill: 'url(#gGold)' }, ps));
+  const rod = el('g', { class: 'piston-rod' }, ps);
+  el('rect', { x: 59, y: 300, width: 14, height: 104, fill: 'url(#gSteel)', stroke: '#1d2633', 'stroke-width': 1 }, rod);
+  el('rect', { x: 50, y: 290, width: 32, height: 14, rx: 4, fill: 'url(#gGold)' }, rod);
+  // Extractor de aire (derecha)
+  const fx = 1846, fy = 530;
+  el('circle', { cx: fx, cy: fy, r: 50, fill: '#151d2b', stroke: 'url(#gGold)', 'stroke-width': 4 }, g);
+  const blades = el('g', { class: 'fan-blades' }, g);
+  blades.style.transformOrigin = `${fx}px ${fy}px`;
+  for (let k = 0; k < 5; k++) {
+    const a = (k * 2 * Math.PI) / 5;
+    el('path', { d: `M${fx} ${fy} Q${pt(fx, fy, 40, a - 0.5)} ${pt(fx, fy, 44, a)} Q${pt(fx, fy, 30, a + 0.4)} ${fx} ${fy}Z`, fill: 'url(#gSteel)', opacity: 0.85 }, blades);
+  }
+  [16, 28, 40].forEach((r) => el('circle', { cx: fx, cy: fy, r, fill: 'none', stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, g));
+  el('line', { x1: fx - 46, y1: fy, x2: fx + 46, y2: fy, stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, g);
+  el('line', { x1: fx, y1: fy - 46, x2: fx, y2: fy + 46, stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, g);
+  jewel(fx, fy, 5, g);
+  // Carteles de seguridad
+  const sign1 = el('g', { transform: 'translate(40 640)' }, g);
+  el('path', { d: 'M30 0 L60 52 L0 52 Z', fill: SAFETY, stroke: '#0b1220', 'stroke-width': 3, 'stroke-linejoin': 'round' }, sign1);
+  el('path', { d: 'M33 14 L24 32 L31 32 L27 46 L38 28 L31 28 L35 14 Z', fill: '#0b1220' }, sign1);
+  const sign2 = el('g', { transform: 'translate(1858 260)' }, g);
+  el('circle', { cx: 26, cy: 26, r: 26, fill: PAL.blued, stroke: '#0b1220', 'stroke-width': 3 }, sign2);
+  el('path', { d: 'M12 32 Q12 14 26 13 Q40 14 40 32 Z', fill: '#fff' }, sign2);
+  el('rect', { x: 8, y: 31, width: 36, height: 5, rx: 2.5, fill: '#fff' }, sign2);
+}
+
+// Cinta transportadora con cajas de repuestos (debajo del panel, detrás de los personajes)
+function conveyor(svg) {
+  const g = el('g', { id: 'conveyor' }, svg);
+  const x1 = 600, x2 = 1340, y = 838;
+  [x1 + 30, x2 - 30].forEach((x) => el('rect', { x: x - 6, y: y + 22, width: 12, height: 1046 - y - 22, fill: '#26303f', stroke: '#05090f', 'stroke-width': 1.5 }, g));
+  el('rect', { x: x1, y: y - 18, width: x2 - x1, height: 36, rx: 18, fill: '#111826', stroke: '#05090f', 'stroke-width': 2 }, g);
+  const belt = el('line', { x1: x1 + 18, y1: y - 15, x2: x2 - 18, y2: y - 15, stroke: '#3a4760', 'stroke-width': 6, 'stroke-dasharray': '22 18', class: 'conveyor-belt' }, g);
+  belt.style.strokeDashoffset = 0;
+  for (let k = 0; k < 24; k++) el('path', { d: `M${x1 + 20 + k * 30} ${y + 18} l12 0 l-8 8 l-12 0 z`, fill: SAFETY, opacity: 0.45 }, g);
+  [x1 + 18, x2 - 18].forEach((x) => {
+    const d = el('g', { class: 'drum' }, g);
+    d.style.transformOrigin = `${x}px ${y}px`;
+    el('circle', { cx: x, cy: y, r: 16, fill: 'url(#gGold)', stroke: '#3a2a08', 'stroke-width': 1.5 }, d);
+    el('line', { x1: x - 12, y1: y, x2: x + 12, y2: y, stroke: '#3a2a08', 'stroke-width': 3 }, d);
+  });
+  // cajas: salen escalonadas y recorren la cinta
+  for (let k = 0; k < 4; k++) {
+    const c = el('g', { class: 'crate' }, g);
+    c.style.animationDelay = (-k * 3.5).toFixed(1) + 's';
+    const cx = x1 + 10, w = 44 + (k % 2) * 10, h = 30 + (k % 3) * 6;
+    el('rect', { x: cx, y: y - 18 - h, width: w, height: h, rx: 3, fill: '#8a6a3a', stroke: '#2a1d08', 'stroke-width': 2 }, c);
+    el('path', { d: `M${cx} ${y - 18 - h} l${w} ${h} M${cx + w} ${y - 18 - h} l${-w} ${h}`, stroke: 'rgba(42,29,8,.45)', 'stroke-width': 2 }, c);
+    el('rect', { x: cx + w / 2 - 9, y: y - 18 - h / 2 - 6, width: 18, height: 12, rx: 2, fill: PAL.ivory }, c);
+  }
+}
+
 export function buildMachine(svg, frontSvg) {
   machineCtl.svg = svg;
   const defs = el('defs', {}, svg);
@@ -253,6 +340,7 @@ export function buildMachine(svg, frontSvg) {
     <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16223a"/><stop offset="1" stop-color="#070d18"/></linearGradient>
     <linearGradient id="tankG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#101b2e"/><stop offset=".35" stop-color="#2d4466"/><stop offset=".6" stop-color="#1d2f4b"/><stop offset="1" stop-color="#0b1424"/></linearGradient>`;
 
+  const truss = el('g', { id: 'trussBack' }, svg);
   // Platina principal con perlado: el "reloj por dentro" que enmarca el panel
   const plate = el('g', { id: 'mainplate' }, svg);
   el('circle', { cx: 960, cy: 500, r: 660, fill: 'url(#perlage)', stroke: '#05090f', 'stroke-width': 6 }, plate);
@@ -347,6 +435,9 @@ export function buildMachine(svg, frontSvg) {
   plug(470, 640, 0, cables); plug(470, 540, 0, cables);
   plug(1450, 520, 180, cables); plug(1450, 640, 180, cables);
   plug(960, 706, -90, cables);
+
+  industrial(svg);
+  conveyor(svg);
 
   // Luces navideñas (paleta cálida y armónica)
   const lights = el('g', {}, svg);

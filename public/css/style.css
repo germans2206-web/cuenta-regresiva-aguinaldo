@@ -315,3 +315,14 @@ html, body { background: radial-gradient(120% 90% at 50% 40%, #13243d 0%, #0a142
 
 #machine { filter: saturate(.88) brightness(.9); }
 #machine .low-gears { opacity: .45; }
+
+/* El cartel de avisos siempre por encima de la maquinaria y los personajes */
+.ticker { z-index: 9; }
+/* Elementos industriales */
+.conveyor-belt { animation: beltMove .9s linear infinite; }
+@keyframes beltMove { to { stroke-dashoffset: -40; } }
+.crate { animation: crateRide 14s linear infinite; }
+@keyframes crateRide { 0% { transform: translateX(0); opacity: 0; } 4% { opacity: 1; } 94% { opacity: 1; } 100% { transform: translateX(760px); opacity: 0; } }
+.fan-blades { animation: spin .7s linear infinite; }
+.drum { animation: spin 1.2s linear infinite; }
+#machine.stopped .conveyor-belt, #machine.stopped .crate, #machine.stopped .fan-blades, #machine.stopped .drum, #machine.stopped .piston-rod { animation-play-state: paused; }

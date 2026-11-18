@@ -899,10 +899,12 @@ function restartMachine() {
   setTickerAlarm(false);
   setStatus('ARRANCANDO…', 'ok');
 }
-async function recruit(ids, min = 3, wait = 10000) {
+async function recruit(ids, min = 3, wait = 10000, max = 4) {
+  ids = [...ids].sort(() => Math.random() - 0.5).sort((a, b) => ids.indexOf(a) - ids.indexOf(b));
   const t0 = performance.now(), got = [];
   while (performance.now() - t0 < wait) {
-    for (const id of ids) if (!A[id].busy && !got.includes(A[id])) { A[id].busy = true; got.push(A[id]); }
+    for (const id of ids) if (got.length < max && !A[id].busy && !got.includes(A[id])) { A[id].busy = true; got.push(A[id]); }
+    if (got.length >= max) break;
     if (got.length === ids.length || (got.length >= min && performance.now() - t0 > 2500)) break;
     await sleep(500);
   }
@@ -1084,7 +1086,7 @@ const BREAKDOWNS = [
 /* ---------------- Director de escena ---------------- */
 const director = {
   party: false,
-  target: 3,
+  target: 2,
   nextScene: performance.now() + 25000,
   nextBreakdown: performance.now() + 70000,
   async breakdown(n) {
@@ -1099,6 +1101,8 @@ const director = {
     return true;
   },
   async scene() {
+    const visibles = actors.filter((a) => a.busy).length;
+    if (visibles > 1) return false;
     const options = SCENES.filter((s) => free(...s.cast));
     if (!options.length) return false;
     const sc = pick(options);
@@ -1110,7 +1114,7 @@ const director = {
   },
   async loop() {
     const first = [...actors].sort(() => Math.random() - 0.5);
-    for (let i = 0; i < 3; i++) { first[i].run(); await sleep(rnd(1800, 3200)); }
+    for (let i = 0; i < 2; i++) { first[i].run(); await sleep(rnd(2500, 4000)); }
     while (!this.party) {
       const now = performance.now();
       if (BD.active) { await sleep(1000); continue; }
@@ -1123,13 +1127,14 @@ const director = {
         if (await this.scene()) this.nextScene = now + rnd(20000, 34000);
         else this.nextScene = now + 4000;
       }
-      if (Math.random() < 0.08) this.target = 2 + Math.floor(Math.random() * 4); // entre 2 y 5 a la vez
+      if (Math.random() < 0.08) this.target = 2 + (Math.random() < 0.35 ? 1 : 0); // 2 o 3 a la vez, nunca una multitud
       const busy = actors.filter((a) => a.busy).length;
-      if (busy < this.target) {
+      // si toca una escena, se espera a que el escenario se vacíe un poco en vez de sumar gente
+      if (busy < this.target && now < this.nextScene) {
         const free = actors.filter((a) => !a.busy && now - a.lastShown > 5000).sort((a, b) => a.lastShown - b.lastShown);
         if (free.length) {
           pick(free.slice(0, 3)).run();
-          if (Math.random() < 0.25 && busy + 1 < this.target) {
+          if (Math.random() < 0.12 && busy + 1 < this.target) {
             const other = free.filter((a) => !a.busy);
             if (other.length) pick(other.slice(0, 3)).run();
           }
