@@ -106,8 +106,8 @@ html, body {
 @keyframes ledblink { to { visibility: hidden; } }
 
 .faltan {
-  margin: 4px 0 0; font: 400 74px/1 "Saira Stencil One", "Chakra Petch", sans-serif;
-  letter-spacing: 14px; color: #f4f1e8;
+  margin: 6px 0 4px; font: 400 54px/1 "Saira Stencil One", "Chakra Petch", sans-serif;
+  letter-spacing: 4px; color: #f4f1e8; white-space: nowrap;
   text-shadow: 0 3px 0 #111, 0 0 26px rgba(255,255,255,.18);
 }
 .faltan.done { color: var(--hazard); animation: pulse .6s ease-in-out infinite alternate; }

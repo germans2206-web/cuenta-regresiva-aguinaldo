@@ -214,7 +214,8 @@ export function buildMachine(svg, frontSvg) {
   tg.forEach(([x, y, r, t], i) => drawGear({ cx: x, cy: y, r, t, h: r * 0.32, phase: 0, dir: i % 2 ? -1 : 1, dur: 6 + i * 1.5, color: i % 2 ? '#1c8a4a' : '#22a457' }, tree));
   const orn = [['#ff3b3b', 1790, 960], ['#ffd23f', 1872, 900], ['#4fc3ff', 1800, 820], ['#ff3b3b', 1862, 760], ['#ffd23f', 1812, 720]];
   orn.forEach(([c, x, y]) => { const o = el('circle', { cx: x, cy: y, r: 10, fill: c, stroke: OL, 'stroke-width': 3, class: 'xmas-bulb' }, tree); o.style.animationDelay = (-Math.random() * 2).toFixed(2) + 's'; });
-  const star = el('g', { class: 'star-tip' }, tree);
+  const star = el('g', { class: 'star-tip', id: 'treeStar' }, tree);
+  star.style.transition = 'opacity .6s';
   const sp = [];
   for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? 13 : 30; sp.push(`${1830 + Math.cos(a) * rr},${636 + Math.sin(a) * rr}`); }
   el('polygon', { points: sp.join(' '), fill: '#ffd23f', stroke: OL, 'stroke-width': 4 }, star).style.filter = 'drop-shadow(0 0 12px #ffd23f)';

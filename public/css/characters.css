@@ -128,8 +128,10 @@
   0% { transform: translateY(0); } 15%, 28% { transform: translateY(90px); }
   38%, 70% { transform: translateY(58px); } 82% { transform: translateY(92px); } 100% { transform: translateY(0); }
 }
+@keyframes snapjump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-80px) rotate(-12deg); } 60% { transform: translateY(-70px) rotate(8deg); } 85% { transform: translateY(0) scale(1.06,.9); } }
 @keyframes pbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 @media (prefers-reduced-motion: reduce) {
   .char *, .bubble { animation-duration: 0s !important; animation-iteration-count: 1 !important; }
 }
+.char.sneaking .root { animation: waddle .45s ease-in-out infinite alternate !important; }

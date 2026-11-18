@@ -105,7 +105,6 @@ const MESSAGES = [
   'RECORDATORIO: EL AGUINALDO NO SE COBRA SOLO, SIGAN CON EL PREVENTIVO',
   'SE RUEGA NO GASTAR EL AGUINALDO ANTES DE COBRARLO',
   'EL PULPO SOLICITA 8 PARES DE GUANTES AL ALMACÉN',
-  'TERERÉ AUTORIZADO EN HORARIO DE PAUSA 🧉',
   'EL PINSCHER SIGUE PELEANDO CON EL BULÓN M24',
   'SEGURIDAD PRIMERO: CASCO, LENTES Y BOTINES',
   '¡FELIZ NAVIDAD, EQUIPO DE MANTENIMIENTO! 🎄',
@@ -140,6 +139,8 @@ document.head.appendChild(styleEl);
 const bubblesLayer = $('#bubbles');
 const fxLayer = $('#fx');
 let activeBubbles = 0;
+const FLOOR = 1046;
+const SPEED = { walk: 0.42, run: 0.95, sneak: 0.22, fly: 0.75, jump: 0.85, ride: 0.8 };
 
 class Actor {
   constructor(def) {
@@ -151,112 +152,200 @@ class Actor {
     this.left = st.x - def.anchor[0] * def.scale;
     this.top = st.y - def.anchor[1] * def.scale;
     this.st = st;
+    this.spots = (def.spots || []).map((p) => (p.lights ? { x: p.lights, y: lightsY(p.lights) + 6, level: 'air' } : { ...p }));
     const el = document.createElement('div');
     el.className = `char c-${def.id}`;
     Object.assign(el.style, { width: this.w + 'px', height: this.h + 'px', left: this.left + 'px', top: this.top + 'px' });
     el.innerHTML = `<div class="flip"><svg viewBox="0 0 ${vw} ${vh}">${def.svg}</svg></div>`;
-    $(def.layer === 'back' ? '#charsBack' : '#charsFront').appendChild(el);
     this.el = el;
+    this.layer = null;
+    this.setLayer(def.layer);
     this.busy = false; this.lastShown = -1e9; this.bag = [];
     this.action = null;
+    this.pos = { x: 0, y: 0 };
+    this.spot = this.spots[0] || null;
+  }
+  get x() { return this.st.x + this.pos.x; }
+  get y() { return this.st.y + this.pos.y; }
+  setLayer(l) {
+    if (l === this.layer) return;
+    this.layer = l;
+    $(l === 'back' ? '#charsBack' : '#charsFront').appendChild(this.el);
+  }
+  place(x, y) {
+    this.pos = { x: x - this.st.x, y: y - this.st.y };
+    this.el.style.transform = `translate(${this.pos.x}px, ${this.pos.y}px)`;
+  }
+  show() { this.el.classList.add('on'); }
+  hide() { this.el.classList.remove('on', 'walking', 'riding', 'flying', 'face-left'); }
+  resetHome() {
+    this.act(null); this.hide(); this.place(this.st.x, this.st.y);
+    this.setLayer(this.def.layer); this.spot = this.spots[0] || null;
   }
   nextAction() {
+    const pool = this.def.actions.filter((a) => !a.scene && (!a.home || this.atHome()));
     if (!this.bag.length) {
-      this.bag = [...this.def.actions].sort(() => Math.random() - 0.5);
+      this.bag = [...this.def.actions.filter((a) => !a.scene)].sort(() => Math.random() - 0.5);
       if (this.bag[0] === this.lastAction && this.bag.length > 1) this.bag.push(this.bag.shift());
     }
-    return (this.lastAction = this.bag.shift());
+    let idx = this.bag.findIndex((a) => pool.includes(a));
+    if (idx < 0) return (this.lastAction = pick(pool));
+    return (this.lastAction = this.bag.splice(idx, 1)[0]);
   }
-  setAction(a) {
+  atHome() { return Math.abs(this.pos.x) < 4 && Math.abs(this.pos.y) < 4; }
+  act(id) {
+    const a = id ? this.def.actions.find((x) => x.id === id) : null;
     if (this.action) this.el.classList.remove('act-' + this.action.id);
     this.action = a;
     if (a) this.el.classList.add('act-' + a.id);
+    if (a?.fx === 'weld') window.scene3d?.weld(a.dur * 1000);
+    return a;
   }
-  say(text, ms) {
-    if (activeBubbles >= 2) return;
+  say(text, ms = 3000, force = false) {
+    if (!force && activeBubbles >= 2) return;
     activeBubbles++;
     const b = document.createElement('div');
     b.className = 'bubble';
     b.textContent = fill(text);
     bubblesLayer.appendChild(b);
     const bw = b.offsetWidth, bh = b.offsetHeight;
-    const cx = this.st.x;
-    let x = cx - 40;
-    x = Math.max(20, Math.min(1900 - bw, x));
-    let y = this.top + 10 - bh - 26;
-    if (this.def.id === 'duck') y = this.top + 120 - bh;
-    if (y < 90) y = this.top + this.h * 0.2 - bh;
-    y = Math.max(84, y);
+    const cx = this.x;
+    let x = Math.max(20, Math.min(1900 - bw, cx - 40));
+    const topNow = this.top + this.pos.y;
+    let y = topNow + 10 - bh - 26;
+    if (this.def.id === 'duck') y = topNow + 120 - bh;
+    if (y < 90) y = topNow + this.h + 30;           // si no entra arriba, va debajo
+    y = Math.max(84, Math.min(1000 - bh, y));
+    // evita que dos globos se encimen
+    for (const o of bubblesLayer.querySelectorAll('.bubble:not(.out)')) {
+      if (o === b) continue;
+      const ox = parseFloat(o.style.left), oy = parseFloat(o.style.top), ow = o.offsetWidth, oh = o.offsetHeight;
+      if (x < ox + ow && x + bw > ox && y < oy + oh && y + bh > oy) y = oy - bh - 34 >= 84 ? oy - bh - 34 : oy + oh + 34;
+    }
     b.style.left = x + 'px'; b.style.top = y + 'px';
     b.style.setProperty('--tail', Math.max(26, Math.min(bw - 26, cx - x)) + 'px');
     setTimeout(() => { b.classList.add('out'); setTimeout(() => { b.remove(); activeBubbles--; }, 260); }, ms);
   }
-  async move(frames, opts, flags = {}) {
-    if (flags.walking) this.el.classList.add('walking');
-    if (flags.riding) this.el.classList.add('riding');
-    if (flags.flying) this.el.classList.add('flying');
-    if (flags.faceLeft) this.el.classList.add('face-left');
-    const a = this.el.animate(frames, { fill: 'forwards', ...opts });
+  // Mueve el punto de apoyo del personaje a (x, y) del escenario
+  async moveTo(x, y, o = {}) {
+    const mode = o.mode || 'walk';
+    const nx = x - this.st.x, ny = y - this.st.y;
+    const dx = nx - this.pos.x, dy = ny - this.pos.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 2) return;
+    const dur = o.dur || Math.max(350, dist / (o.speed || SPEED[mode] || 0.5));
+    const from = `translate(${this.pos.x}px, ${this.pos.y}px)`;
+    const to = `translate(${nx}px, ${ny}px)`;
+    let frames = [{ transform: from }, { transform: to }];
+    if (o.arc) {
+      const mx = (this.pos.x + nx) / 2, my = Math.min(this.pos.y, ny) - o.arc;
+      frames = [{ transform: from, easing: 'ease-out' }, { transform: `translate(${mx}px, ${my}px)`, easing: 'ease-in' }, { transform: to }];
+    }
+    const cls = { walk: 'walking', run: 'walking', sneak: 'walking', fly: 'flying', ride: 'riding' }[mode];
+    if (cls) this.el.classList.add(cls);
+    if (mode === 'sneak') this.el.classList.add('sneaking');
+    if (o.face !== false) this.el.classList.toggle('face-left', dx < -2);
+    const a = this.el.animate(frames, { duration: dur, easing: o.easing || (o.arc ? 'linear' : mode === 'fly' ? 'ease-in-out' : 'linear'), fill: 'forwards' });
     await a.finished;
-    this.el.classList.remove('walking', 'riding', 'flying', 'face-left');
-    return a;
+    this.pos = { x: nx, y: ny };
+    this.el.style.transform = to;
+    a.cancel();
+    this.el.classList.remove('walking', 'flying', 'riding', 'sneaking');
+    if (!o.keepFace) this.el.classList.remove('face-left');
+  }
+  // Viaje entre puntos (los voladores vuelan; el ratón corre y salta entre el panel y el piso)
+  async travelTo(s) {
+    if (this.def.travel === 'fly') {
+      await this.moveTo(s.x, s.y, { mode: 'fly', arc: 70 + Math.random() * 90 });
+    } else {
+      const cur = this.spot || this.spots[0];
+      if (cur && cur.level !== s.level) {
+        this.setLayer('front');
+        await this.moveTo(s.x, s.y, { mode: 'jump', arc: s.level === 'top' ? 260 : 120, speed: 0.8 });
+        if (s.level === 'floor') this.dust(14);
+      } else {
+        await this.moveTo(s.x, s.y, { mode: 'run' });
+      }
+      this.setLayer(s.level === 'top' ? 'back' : 'front');
+    }
+    this.spot = s;
   }
   async enter() {
-    const d = this.def, el = this.el;
-    el.getAnimations().forEach((a) => a.cancel());
-    el.classList.add('on');
-    const T = (x, y = 0) => `translate(${x}px, ${y}px)`;
+    const d = this.def, st = this.st;
+    this.el.getAnimations().forEach((a) => a.cancel());
+    this.setLayer(d.layer);
+    this.show();
     switch (d.enter) {
-      case 'walkL': { const dx = -this.left - this.w - 60; await this.move([{ transform: T(dx) }, { transform: T(0) }], { duration: Math.abs(dx) / 0.42, easing: 'linear' }, { walking: true }); break; }
-      case 'walkR': { const dx = 1920 - this.left + 60; await this.move([{ transform: T(dx) }, { transform: T(0) }], { duration: Math.abs(dx) / 0.42, easing: 'linear' }, { walking: true, faceLeft: true }); break; }
-      case 'ride': { const dx = -this.left - this.w - 60; await this.move([{ transform: T(dx) }, { transform: T(0) }], { duration: Math.abs(dx) / 0.8, easing: 'cubic-bezier(.2,.6,.4,1)' }, { riding: true }); break; }
-      case 'fly': await this.move([{ transform: T(520, -420) + ' rotate(-10deg)' }, { transform: T(120, -60) + ' rotate(-4deg)', offset: 0.7 }, { transform: T(0) }], { duration: 2200, easing: 'ease-out' }, { flying: true, faceLeft: true }); break;
-      case 'rise': await this.move([{ transform: T(0, 300) }, { transform: T(0, -20), offset: 0.75 }, { transform: T(0) }], { duration: 1500, easing: 'ease-out' }); break;
+      case 'walkL': this.place(st.x - (st.x + this.w + 60), st.y); await this.moveTo(st.x, st.y, { mode: 'walk' }); break;
+      case 'walkR': this.place(1920 + (st.x - this.left) + 60, st.y); await this.moveTo(st.x, st.y, { mode: 'walk' }); break;
+      case 'ride': this.place(st.x - (st.x + this.w + 60), st.y); await this.moveTo(st.x, st.y, { mode: 'ride', easing: 'cubic-bezier(.2,.6,.4,1)' }); break;
+      case 'fly': this.place(st.x + (st.x < 960 ? -700 : 700), st.y - 460); await this.moveTo(st.x, st.y, { mode: 'fly', dur: 2000, easing: 'ease-out' }); break;
+      case 'rise': this.place(st.x, st.y + 300); await this.moveTo(st.x, st.y, { mode: 'none', dur: 1400, easing: 'cubic-bezier(.3,1.3,.5,1)' }); break;
       case 'drop':
-        await this.move([{ transform: T(0, -1300) }, { transform: T(0, 0), offset: 0.7, easing: 'ease-out' }, { transform: T(0, -40), offset: 0.82, easing: 'ease-in' }, { transform: T(0) }], { duration: 1300, easing: 'ease-in' });
-        this.dust(); break;
-      case 'peekup': await this.move([{ transform: T(0, 200) }, { transform: T(0, 0) }], { duration: 1100, easing: 'cubic-bezier(.3,1.4,.5,1)' }); break;
+        this.place(st.x, st.y - 1300);
+        await this.moveTo(st.x, st.y, { mode: 'none', dur: 850, easing: 'cubic-bezier(.5,0,1,1)' });
+        this.dust();
+        await this.moveTo(st.x, st.y - 36, { mode: 'none', dur: 160, easing: 'ease-out' });
+        await this.moveTo(st.x, st.y, { mode: 'none', dur: 160, easing: 'ease-in' });
+        break;
+      case 'peekup': this.place(st.x, st.y + 200); await this.moveTo(st.x, st.y, { mode: 'none', dur: 1000, easing: 'cubic-bezier(.3,1.4,.5,1)' }); break;
     }
+    this.spot = this.spots[0] || null;
   }
   async exit() {
-    const d = this.def;
-    const T = (x, y = 0) => `translate(${x}px, ${y}px)`;
-    switch (d.enter) {
-      case 'walkL': { const dx = -this.left - this.w - 60; await this.move([{ transform: T(0) }, { transform: T(dx) }], { duration: Math.abs(dx) / 0.42, easing: 'linear' }, { walking: true, faceLeft: true }); break; }
-      case 'walkR': { const dx = 1920 - this.left + 60; await this.move([{ transform: T(0) }, { transform: T(dx) }], { duration: Math.abs(dx) / 0.42, easing: 'linear' }, { walking: true }); break; }
-      case 'ride': { const dx = 1920 - this.left + 60; await this.move([{ transform: T(0) }, { transform: T(dx) }], { duration: Math.abs(dx) / 0.8, easing: 'cubic-bezier(.6,0,.8,.4)' }, { riding: true }); break; }
-      case 'fly': await this.move([{ transform: T(0) }, { transform: T(-160, -80) + ' rotate(8deg)', offset: 0.3 }, { transform: T(-900, -500) + ' rotate(12deg)' }], { duration: 2000, easing: 'ease-in' }, { flying: true, faceLeft: true }); break;
-      case 'rise': await this.move([{ transform: T(0) }, { transform: T(0, -24), offset: 0.25 }, { transform: T(0, 300) }], { duration: 1200, easing: 'ease-in' }); break;
-      case 'drop': this.dust(); await this.move([{ transform: T(0) }, { transform: T(0, 20) + ' scaleY(.85)', offset: 0.12 }, { transform: T(0, -1300) }], { duration: 1100, easing: 'ease-in' }); break;
-      case 'peekup': await this.move([{ transform: T(0) }, { transform: T(0, 200) }], { duration: 800, easing: 'ease-in' }); break;
+    const d = this.def, st = this.st;
+    if (d.travel === 'fly') {
+      const right = this.x > 960;
+      await this.moveTo(right ? 2200 : -300, this.y - 520, { mode: 'fly', dur: 1800, easing: 'ease-in' });
+    } else if (d.travel === 'ground') {
+      if (this.spot?.level === 'top' && this.atHome()) {
+        await this.moveTo(st.x, st.y + 200, { mode: 'none', dur: 700, easing: 'ease-in' });
+      } else {
+        if (this.spot?.level === 'top') await this.travelTo(this.spots.find((p) => p.level === 'floor'));
+        await this.moveTo(this.x > 960 ? 2060 : -140, FLOOR, { mode: 'run' });
+      }
+    } else {
+      if (!this.atHome()) await this.moveTo(st.x, st.y, { mode: 'walk' });
+      switch (d.enter) {
+        case 'walkL': await this.moveTo(-this.w - 60 + (st.x - this.left), st.y, { mode: 'walk' }); break;
+        case 'walkR': await this.moveTo(1920 + (st.x - this.left) + 60, st.y, { mode: 'walk' }); break;
+        case 'ride': await this.moveTo(1920 + (st.x - this.left) + 60, st.y, { mode: 'ride', easing: 'cubic-bezier(.6,0,.8,.4)' }); break;
+        case 'fly': await this.moveTo(st.x - 900, st.y - 500, { mode: 'fly', dur: 1800, easing: 'ease-in' }); break;
+        case 'rise': await this.moveTo(st.x, st.y - 24, { mode: 'none', dur: 250, easing: 'ease-out' }); await this.moveTo(st.x, st.y + 300, { mode: 'none', dur: 900, easing: 'ease-in' }); break;
+        case 'drop': this.dust(); await this.moveTo(st.x, st.y - 1300, { mode: 'none', dur: 950, easing: 'ease-in' }); break;
+        case 'peekup': await this.moveTo(st.x, st.y + 200, { mode: 'none', dur: 700, easing: 'ease-in' }); break;
+      }
     }
-    this.el.classList.remove('on');
+    this.resetHome();
   }
-  dust() {
-    for (let i = 0; i < 8; i++) {
+  dust(n = 8) {
+    for (let i = 0; i < n; i++) {
       const p = document.createElement('div');
       p.className = 'dust';
-      const s = rnd(20, 40);
-      Object.assign(p.style, { width: s + 'px', height: s + 'px', left: this.st.x + rnd(-60, 60) + 'px', top: this.st.y - s / 2 + 'px' });
+      const s = rnd(16, 38);
+      Object.assign(p.style, { width: s + 'px', height: s + 'px', left: this.x + rnd(-60, 60) + 'px', top: this.y - s / 2 + 'px' });
       fxLayer.appendChild(p);
       p.animate([{ transform: 'translate(0,0) scale(.4)', opacity: 0.9 }, { transform: `translate(${rnd(-120, 120)}px, ${rnd(-60, -10)}px) scale(1.6)`, opacity: 0 }], { duration: 900, easing: 'ease-out' }).finished.then(() => p.remove());
     }
   }
   async perform(n) {
     for (let i = 0; i < n && !director.party; i++) {
-      const a = this.nextAction();
-      this.setAction(a);
-      if (a.fx === 'weld') window.scene3d?.weld(a.dur * 1000);
+      if (this.spots.length > 1 && i > 0 && Math.random() < (this.def.roamChance || 0)) {
+        const others = this.spots.filter((p) => p !== this.spot);
+        await this.travelTo(pick(others));
+      }
+      if (this.def.id === 'mouse' && Math.random() < (this.def.tripChance || 0)) { await mouseHeist(this); continue; }
+      const a = this.act(this.nextAction().id);
       if (a.say && Math.random() < 0.7) setTimeout(() => this.say(pick(a.say), Math.min(3400, a.dur * 1000 - 400)), 350);
       await sleep(a.dur * 1000);
-      this.setAction(null);
+      this.act(null);
       await sleep((this.def.gap || 0.6) * 1000);
     }
   }
   async run() {
     this.busy = true;
     await this.enter();
-    await this.perform(3 + Math.floor(Math.random() * 3));
+    await this.perform(this.def.spots ? 4 + Math.floor(Math.random() * 3) : 3 + Math.floor(Math.random() * 3));
     if (!director.party) {
       await this.exit();
       this.lastShown = performance.now();
@@ -266,25 +355,201 @@ class Actor {
 }
 
 const actors = CHARACTERS.map((c) => new Actor(c));
+const A = Object.fromEntries(actors.map((a) => [a.def.id, a]));
+window.__actors = actors;
+
+/* ---------------- El ratón ladrón: roba repuestos de lugares ---------------- */
+async function mouseHeist(m) {
+  const floors = m.spots.filter((p) => p.level === 'floor');
+  const from = pick(floors);
+  await m.travelTo(from);
+  m.act('grab');
+  m.say(pick(['Esto no lo usa nadie… ¿no? 🤫', 'Un repuesto más para mi colección 🐭', 'Préstamo… a largo plazo 😏', 'Si nadie lo vio, no pasó nada']), 2200);
+  await sleep(1500);
+  m.act(pick(['loot-bolt', 'loot-gear', 'loot-wrench']));
+  await sleep(400);
+  const to = pick(m.spots.filter((p) => p !== from));
+  await m.travelTo(to);
+  m.act(null);
+  await sleep(500);
+}
+
+/* ---------------- Escenas con varios animales ---------------- */
+const free = (...ids) => ids.every((id) => !A[id].busy);
+const SCENES = [
+  {
+    // El pinscher se pelea con el anó
+    cast: ['pinscher', 'bird'],
+    async run() {
+      const P = A.pinscher, B = A.bird;
+      await P.enter(); P.act('struggle');
+      B.setLayer('front'); B.show(); B.place(2150, 520);
+      await B.moveTo(P.x + 138, 912, { mode: 'fly', dur: 1800, easing: 'ease-out' });
+      B.act('sing'); B.say('¿Todavía con ese bulón? 😏', 2600, true);
+      await sleep(2600);
+      B.act(null); P.act('bark'); P.say('¡GRRR! ¡Bajate de ahí, pájaro!', 2600, true);
+      await sleep(2400);
+      P.act('snap'); B.say('¡Anó, anó! ¡No me alcanzás! 😜', 3200, true);
+      const cx = P.x + 20, cy = 900;
+      for (const [dx, dy] of [[-110, 20], [0, -90], [110, 10], [0, 40], [-110, -20], [10, -100]]) await B.moveTo(cx + dx, cy + dy, { mode: 'fly', speed: 0.55 });
+      P.act('dizzy'); P.say('Me mareé… 😵‍💫', 2600, true);
+      await B.moveTo(P.x + 138, 912, { mode: 'fly', speed: 0.6 });
+      B.act('sing'); B.say('¡Jajajá! Anó anó 🐦', 2600, true);
+      await sleep(2800);
+      B.act(null); await B.exit();
+      P.act('bark'); P.say('¡Y NO VUELVAS! 😤', 2400, true);
+      await sleep(2500); P.act(null); await sleep(400); await P.exit();
+    },
+  },
+  {
+    // El ratón le roba la chipa al chanchito
+    cast: ['pig', 'mouse'],
+    async run() {
+      const G = A.pig, M = A.mouse, L = !A.parrot.busy ? A.parrot : null;
+      if (L) L.busy = true;
+      await G.enter(); G.act('chipa'); G.say('Mmm… chipa calentita 😋', 2400, true);
+      M.setLayer('front'); M.show(); M.place(-120, FLOOR);
+      await M.moveTo(G.x - 80, FLOOR, { mode: 'sneak' });
+      M.act('grab'); await sleep(900);
+      G.el.classList.add('no-chipa'); M.act('loot-chipa');
+      M.say('¡Gracias por la merienda! 🤭', 2200, true);
+      await M.moveTo(G.x + 230, FLOOR, { mode: 'run' });
+      G.act('angry'); G.say('¡¿Y MI CHIPA?! 😡', 2600, true);
+      if (L) { await L.enter(); L.act('snitch'); L.say('¡Ladrón! ¡Ladrón! ¡Fue el ratón! 🦜', 2600, true); }
+      await sleep(1200);
+      G.act(null);
+      await Promise.all([M.moveTo(2080, FLOOR, { mode: 'run' }), sleep(400).then(() => G.moveTo(G.x + 520, FLOOR, { mode: 'run', speed: 0.6 }))]);
+      M.resetHome();
+      G.say('¡Volvé acá, ratón! 😤', 2200, true);
+      await sleep(2200);
+      await G.moveTo(G.st.x, G.st.y, { mode: 'walk' });
+      G.el.classList.remove('no-chipa'); G.act('dream'); G.say('Bueno… me compro otra con el aguinaldo 😔', 3000, true);
+      await sleep(3200); G.act(null);
+      if (L) { L.act(null); await L.exit(); L.lastShown = performance.now(); L.busy = false; }
+      await G.exit();
+    },
+  },
+  {
+    // El ratón le roba la llave al pinscher
+    cast: ['pinscher', 'mouse'],
+    async run() {
+      const P = A.pinscher, M = A.mouse;
+      await P.enter(); P.act('struggle'); P.say('Ya casi… ya casi sale… 😬', 2400, true);
+      M.setLayer('front'); M.show(); M.place(-120, FLOOR);
+      await M.moveTo(P.x + 40, FLOOR, { mode: 'sneak', speed: 0.35 });
+      M.act('grab'); await sleep(900);
+      P.el.classList.add('no-wrench'); M.act('loot-wrench');
+      M.say('¡Esta llave me viene justo! 🔧', 2200, true);
+      P.act('bark'); P.say('¡EY! ¡Mi llave! ¡GUAU GUAU!', 2600, true);
+      await M.moveTo(-160, FLOOR, { mode: 'run', speed: 1.1, keepFace: true });
+      M.resetHome();
+      P.act('snap'); await sleep(2400);
+      P.act('tremble'); P.say('Ahora sí que no sale este bulón… 😭', 2800, true);
+      await sleep(3000); P.act(null); P.el.classList.remove('no-wrench');
+      await P.exit();
+    },
+  },
+  {
+    // El ratón se roba la estrella del arbolito y cruza toda la pantalla
+    cast: ['mouse'],
+    async run() {
+      const M = A.mouse, L = !A.parrot.busy ? A.parrot : null, starEl = $('#treeStar');
+      if (L) L.busy = true;
+      M.setLayer('front'); M.show(); M.place(2060, FLOOR);
+      await M.moveTo(1740, FLOOR, { mode: 'run' });
+      M.say('Mmm… esa estrella brilla lindo ✨', 2200, true);
+      await sleep(1200);
+      await M.moveTo(1830, 664, { mode: 'jump', arc: 120, speed: 0.7 });
+      M.act('grab'); await sleep(700);
+      starEl.style.opacity = 0; M.act('loot-star');
+      M.say('¡Para decorar mi cueva! ⭐', 2200, true);
+      await sleep(1200);
+      await M.moveTo(1690, FLOOR, { mode: 'jump', arc: 90, speed: 0.7 }); M.dust(10);
+      if (L) { L.enter().then(() => { L.act('snitch'); L.say('¡Se robó la estrella del arbolito! 🦜', 2800, true); }); }
+      await M.moveTo(-160, FLOOR, { mode: 'run', speed: 0.9 });
+      M.resetHome();
+      await sleep(1500);
+      starEl.style.opacity = 1;
+      if (L) { await sleep(1500); L.act('talk'); L.say('…ah, no. Era de plástico. Ya pusieron otra 😅', 2800, true); await sleep(3000); L.act(null); await L.exit(); L.lastShown = performance.now(); L.busy = false; }
+    },
+  },
+  {
+    // El loro imita al pinscher
+    cast: ['pinscher', 'parrot'],
+    async run() {
+      const P = A.pinscher, L = A.parrot;
+      await P.enter(); P.act('bark'); P.say('¡GUAU! ¡GUAU! ¡Este bulón me odia!', 2600, true);
+      L.setLayer('front'); L.show(); L.place(2150, 500);
+      await L.moveTo(P.x + 138, 912, { mode: 'fly', dur: 1800, easing: 'ease-out' });
+      await sleep(400);
+      P.act(null); L.act('mimic'); L.say('¡GUAU! ¡GUAU! 🦜', 2200, true);
+      await sleep(2200);
+      L.act(null); P.act('tremble'); P.say('¿Eh? ¿Quién ladró? 😳', 2400, true);
+      await sleep(2400);
+      L.act('talk'); L.say('¡Lorito ladra mejor que vos! ¡GUAU!', 2600, true);
+      await sleep(2600);
+      L.act(null); P.act('snap'); P.say('¡Loro copión! ¡GRRR!', 2400, true);
+      await sleep(1800);
+      L.act('dance'); L.say('Copión no… ¡bilingüe! 😎', 2400, true);
+      await sleep(2400);
+      L.act(null); await L.exit();
+      P.act(null); await sleep(400); await P.exit();
+    },
+  },
+  {
+    // El oso le convida tereré al conejo cansado
+    cast: ['bear', 'rabbit'],
+    async run() {
+      const O = A.bear, R = A.rabbit;
+      await Promise.all([O.enter(), R.enter()]);
+      R.act('tired'); R.say('Faltan {d} días… y no doy más 😮‍💨', 2800, true);
+      await sleep(2600);
+      R.act(null);
+      O.act('terere');
+      await O.moveTo(R.x - 230, O.st.y, { mode: 'walk' });
+      O.say('Tomá un tereré bien frío, compañero 🧉', 2800, true);
+      await sleep(2800);
+      R.act('wheelie'); R.say('¡Ahora sí! ¡Energía para llegar al 15! ⚡', 2800, true);
+      await sleep(2800);
+      O.act('dance'); R.act(null);
+      await R.exit();
+      O.act(null);
+      await O.exit();
+    },
+  },
+];
 
 /* ---------------- Director de escena ---------------- */
 const director = {
   party: false,
   target: 3,
+  nextScene: performance.now() + 25000,
+  async scene() {
+    const options = SCENES.filter((s) => free(...s.cast));
+    if (!options.length) return false;
+    const sc = pick(options);
+    sc.cast.forEach((id) => (A[id].busy = true));
+    sc.run().catch((e) => console.warn('escena', e)).finally(() => {
+      sc.cast.forEach((id) => { const a = A[id]; if (!director.party) { a.resetHome(); a.busy = false; a.lastShown = performance.now(); } });
+    });
+    return true;
+  },
   async loop() {
-    // arranque: los personajes van apareciendo de a poco
     const first = [...actors].sort(() => Math.random() - 0.5);
     for (let i = 0; i < 3; i++) { first[i].run(); await sleep(rnd(1800, 3200)); }
     while (!this.party) {
+      const now = performance.now();
+      if (now > this.nextScene) {
+        if (await this.scene()) this.nextScene = now + rnd(28000, 45000);
+        else this.nextScene = now + 4000;
+      }
       if (Math.random() < 0.08) this.target = 2 + Math.floor(Math.random() * 4); // entre 2 y 5 a la vez
       const busy = actors.filter((a) => a.busy).length;
       if (busy < this.target) {
-        const now = performance.now();
         const free = actors.filter((a) => !a.busy && now - a.lastShown > 5000).sort((a, b) => a.lastShown - b.lastShown);
         if (free.length) {
           pick(free.slice(0, 3)).run();
-          // a veces aparecen dos juntos
-          if (Math.random() < 0.25 && busy + 1 < this.target && free.length > 1) {
+          if (Math.random() < 0.25 && busy + 1 < this.target) {
             const other = free.filter((a) => !a.busy);
             if (other.length) pick(other.slice(0, 3)).run();
           }
@@ -294,8 +559,12 @@ const director = {
     }
   },
 };
-window.__actors = actors;
-if (!params.has('quieto')) director.loop();
+window.__scenes = SCENES; window.__director = director;
+if (params.has('escena')) {
+  // ?escena=N  → prueba una escena puntual
+  const n = parseInt(params.get('escena'), 10) || 0;
+  setTimeout(() => { const s = SCENES[n % SCENES.length]; s.cast.forEach((id) => (A[id].busy = true)); s.run(); }, 1200);
+} else if (!params.has('quieto')) director.loop();
 
 /* ---------------- ¡Llegó el aguinaldo! ---------------- */
 async function celebrate() {
@@ -303,18 +572,17 @@ async function celebrate() {
   window.scene3d?.celebrate(true);
   const lbl = $('#faltanLabel');
   lbl.textContent = '¡LLEGÓ EL AGUINALDO!';
-  lbl.style.fontSize = '58px';
-  lbl.style.letterSpacing = '6px';
   lbl.classList.add('done');
   $('#statusLabel').textContent = '¡A COBRAR! 🎉';
+  $('#treeStar') && ($('#treeStar').style.opacity = 1);
   const cheers = ['¡AGUINALDO! 🎉', '¡A cobrar, gente!', '¡Feliz Navidad, taller! 🎄', '¡Lo logramos!', '¡Tereré y aguinaldo!'];
   for (const a of actors) {
-    a.setAction(null);
     a.el.getAnimations().forEach((x) => x.cancel());
-    a.el.classList.remove('walking', 'riding', 'flying', 'face-left');
-    a.el.classList.add('on', 'party');
+    a.resetHome();
+    a.el.classList.remove('no-chipa', 'no-wrench');
+    a.show();
+    a.el.classList.add('party');
   }
-  // globos y lluvia de confeti + billetes
   setInterval(() => { activeBubbles = Math.min(activeBubbles, 1); pick(actors).say(pick(cheers), 2400); }, 1600);
   const cols = ['#ff3b3b', '#3dff7a', '#ffd23f', '#4fc3ff', '#ff7bd5', '#fff'];
   setInterval(() => {
