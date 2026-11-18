@@ -45,12 +45,35 @@ function el(tag, attrs = {}, parent) {
   return e;
 }
 
+// ---- Control de la maquinaria (paradas, atascos, arranques) ----
+const gearAnims = [];
+export const machineCtl = {
+  svg: null, master: null, rate: 1, _raf: 0,
+  ramp(to, ms = 1500) {
+    cancelAnimationFrame(this._raf);
+    const from = this.rate, t0 = performance.now();
+    const step = () => {
+      const k = Math.min(1, (performance.now() - t0) / ms), e = k * k * (3 - 2 * k);
+      this.rate = from + (to - from) * e;
+      gearAnims.forEach((a) => (a.playbackRate = this.rate));
+      if (k < 1) this._raf = requestAnimationFrame(step);
+    };
+    step();
+    window.scene3d?.setRate?.(to, ms);
+  },
+  stop(ms = 1600) { this.svg.classList.add('stopped'); this.ramp(0, ms); },
+  jam() { this.svg.classList.add('stopped', 'jam'); this.ramp(0, 250); },
+  unjam() { this.svg.classList.remove('jam'); },
+  start(ms = 2200) { this.svg.classList.remove('stopped', 'jam'); this.ramp(1, ms); },
+  pin(visible) { const p = document.getElementById('masterPin'); if (p) p.style.opacity = visible ? 1 : 0; },
+};
+
 function drawGear(g, parent) {
   const grp = el('g', { class: 'gear-rot' }, parent);
   grp.style.transformBox = 'view-box';
   grp.style.transformOrigin = `${g.cx}px ${g.cy}px`;
-  grp.animate([{ transform: 'rotate(0deg)' }, { transform: `rotate(${360 * g.dir}deg)` }],
-    { duration: g.dur * 1000, iterations: Infinity });
+  gearAnims.push(grp.animate([{ transform: 'rotate(0deg)' }, { transform: `rotate(${360 * g.dir}deg)` }],
+    { duration: g.dur * 1000, iterations: Infinity }));
   el('path', { d: gearPath(g.cx, g.cy, g.r, g.t, g.h, g.phase), fill: g.color, stroke: OL, 'stroke-width': 4, 'fill-rule': 'evenodd' }, grp);
   // anillo interior + rayos para que se note el giro
   el('circle', { cx: g.cx, cy: g.cy, r: g.r * 0.72, fill: 'none', stroke: 'rgba(0,0,0,.35)', 'stroke-width': 6 }, grp);
@@ -163,7 +186,18 @@ export function buildMachine(svg, frontSvg) {
   el('rect', { x: 298, y: 216, width: 68, height: 22, rx: 5, fill: '#8d939b', stroke: OL, 'stroke-width': 4 }, rod);
 
   // Engranajes (detrás del panel, asomando)
-  const gearsG = el('g', {}, svg);
+  machineCtl.svg = svg;
+  const gearsG = el('g', { id: 'gearsG' }, svg);
+  // Más engranajes: esquinas, piso y bordes del panel
+  const extra = [
+    gearTrain({ x: 80, y: 190, r: 90, t: 20 }, [{ t: 20, color: '#6d7580' }, { t: 12, ang: 40, color: '#a3542e' }, { t: 8, ang: -20, color: '#c9a227' }], 14),
+    gearTrain({ x: 1890, y: 150, r: 80, t: 18 }, [{ t: 18, color: '#7f8893' }, { t: 11, ang: 150, color: '#c9a227' }, { t: 7, ang: 200, color: '#a3542e' }], 12),
+    gearTrain({ x: 600, y: 985, r: 70, t: 16 }, [{ t: 16, color: '#6d7580' }, { t: 10, ang: -30, color: '#c9a227' }, { t: 20, ang: 10, color: '#a3542e' }], 12),
+    gearTrain({ x: 1180, y: 990, r: 60, t: 14 }, [{ t: 14, color: '#7f8893' }, { t: 9, ang: -40, color: '#c9a227' }, { t: 18, ang: 20, color: '#6d7580' }], 10),
+    gearTrain({ x: 520, y: 718, r: 40, t: 10 }, [{ t: 10, color: '#c9a227' }, { t: 8, ang: 25, color: '#8d939b' }], 7),
+    gearTrain({ x: 1400, y: 718, r: 40, t: 10 }, [{ t: 10, color: '#c9a227' }, { t: 8, ang: 155, color: '#8d939b' }], 7),
+  ];
+  extra.flat().forEach((g) => drawGear(g, gearsG));
   const left = gearTrain({ x: 470, y: 600, r: 120, t: 24 }, [
     { t: 24, color: '#7f8893' },
     { t: 14, ang: 205, color: '#c9a227' },
@@ -174,7 +208,7 @@ export function buildMachine(svg, frontSvg) {
     { t: 22, color: '#7f8893' },
     { t: 12, ang: 10, color: '#c9a227' },
     { t: 16, ang: 60, color: '#a3542e' },
-    { t: 26, ang: 120, color: '#6d7580' },
+    { t: 26, ang: 120, color: '#c0392b' },
   ], 16);
   const top = gearTrain({ x: 760, y: 236, r: 64, t: 14 }, [
     { t: 14, color: '#a3542e' },
@@ -182,6 +216,20 @@ export function buildMachine(svg, frontSvg) {
     { t: 16, ang: 10, color: '#7f8893' },
   ], 10);
   [...left, ...right, ...top].forEach((g) => drawGear(g, gearsG));
+  // Engranaje MAESTRO (rojo) con su perno dorado: si falta el perno, se para todo
+  const M = right[right.length - 1];
+  machineCtl.master = { x: M.cx, y: M.cy, r: M.r };
+  const halo = el('circle', { cx: M.cx, cy: M.cy, r: M.r + 16, fill: 'none', stroke: '#ff3b24', 'stroke-width': 4, 'stroke-dasharray': '10 12', class: 'master-halo' }, gearsG);
+  const pinG = el('g', { id: 'masterPin' }, gearsG);
+  pinG.style.transition = 'opacity .3s';
+  const hp = [];
+  for (let i = 0; i < 6; i++) { const a = (Math.PI / 3) * i; hp.push(`${(M.cx + Math.cos(a) * 20).toFixed(1)},${(M.cy + Math.sin(a) * 20).toFixed(1)}`); }
+  el('polygon', { points: hp.join(' '), fill: '#ffd23f', stroke: OL, 'stroke-width': 4 }, pinG);
+  el('circle', { cx: M.cx, cy: M.cy, r: 7, fill: '#a07f1c', stroke: OL, 'stroke-width': 2 }, pinG);
+  const tag = el('g', {}, gearsG);
+  el('rect', { x: M.cx - 62, y: M.cy + M.r + 22, width: 124, height: 24, rx: 4, fill: '#c0392b', stroke: OL, 'stroke-width': 3 }, tag);
+  const tt = el('text', { x: M.cx, y: M.cy + M.r + 39, 'text-anchor': 'middle', 'font-family': 'Chakra Petch', 'font-weight': 700, 'font-size': 13, fill: '#fff' }, tag);
+  tt.textContent = 'ENGRANAJE MAESTRO';
 
   // Cables hacia el panel
   const cables = el('g', {}, svg);

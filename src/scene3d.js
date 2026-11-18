@@ -98,6 +98,12 @@ function init() {
   chain({ t: 34, x: 30, y: -4, mat: mats.dark }, [
     { t: 14, ang: 150, mat: mats.brass }, { t: 20, ang: 95, mat: mats.steel }, { t: 26, ang: 30, mat: mats.copper },
   ], -21, 8);
+  chain({ t: 26, x: -46, y: -14, mat: mats.brass }, [
+    { t: 14, ang: 30, mat: mats.steel }, { t: 18, ang: 80, mat: mats.dark },
+  ], -24, 7);
+  chain({ t: 22, x: 48, y: 16, mat: mats.steel }, [
+    { t: 12, ang: 200, mat: mats.copper }, { t: 30, ang: 250, mat: mats.brass },
+  ], -25, 6);
   chain({ t: 18, x: -4, y: 15, mat: mats.copper }, [
     { t: 12, ang: 10, mat: mats.steel }, { t: 24, ang: -10, mat: mats.brass },
   ], -23, 7);
@@ -158,11 +164,14 @@ function init() {
     camera.updateProjectionMatrix();
   });
 
-  let weldUntil = 0, celebrate = false;
+  let weldUntil = 0, celebrate = false, rate = 1, rateTarget = 1, rateStep = 1, dim = 1, dimTarget = 1;
   window.scene3d = {
     weld(ms = 3000) { weldUntil = performance.now() + ms; },
     celebrate(on = true) { celebrate = on; },
+    setRate(to, ms = 1500) { rateTarget = to; rateStep = 1 / Math.max(ms / 1000, 0.05); },
+    dim(on) { dimTarget = on ? 0.25 : 1; },
   };
+  const baseKey = key.intensity, baseKey2 = key2.intensity;
 
   const clock = new THREE.Clock();
   let running = true;
@@ -174,7 +183,10 @@ function init() {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.elapsedTime;
 
-    for (const g of gears) g.m.rotation.z += g.dir * g.speed * dt * (celebrate ? 4 : 1);
+    rate += Math.sign(rateTarget - rate) * Math.min(Math.abs(rateTarget - rate), rateStep * dt);
+    dim += (dimTarget - dim) * Math.min(1, dt * 3);
+    key.intensity = baseKey * dim; key2.intensity = baseKey2 * dim;
+    for (const g of gears) g.m.rotation.z += g.dir * g.speed * dt * (celebrate ? 4 : 1) * rate;
 
     const p = snowGeo.attributes.position.array;
     for (let i = 0; i < SNOW; i++) {

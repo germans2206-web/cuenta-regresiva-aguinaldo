@@ -8,7 +8,7 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
 - **Maquinaria funcionando detrás**: engranajes que engranan de verdad, cables con corriente, caños de cobre,
   manómetro, pistón, vapor, luces navideñas y un arbolito hecho de engranajes.
 - **Fondo 3D (Three.js)**: engranajes metálicos girando, caños, nieve y luces bokeh.
-- **9 personajes con 6 animaciones cada uno** que van apareciendo de a poco (a veces varios a la vez):
+- **10 personajes con 6 animaciones cada uno** que van apareciendo de a poco (a veces varios a la vez):
   | Personaje | Acciones |
   |---|---|
   | Oso soldador | suelda, se seca el sudor, martilla, toma tereré, baila, mira el reloj |
@@ -19,9 +19,11 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
   | Pinscher rabioso | pelea con el bulón, ladra, patea, tira la llave, tiembla, ¡lo saca! |
   | Chanchito navideño | aceita engranajes, se resbala, come chipa, golpea el manómetro, barre, sueña |
   | Ratón con casco | linterna, corre en la rueda, carga un bulón, carga la OT, espía, saluda — y **roba repuestos** recorriendo el panel y el piso |
+  | Mono travieso | come banana, toca batería, mortal hacia atrás, golpe de pecho, malabares, selfie — salta por toda la pantalla |
   | Loro con casco | habla, supervisa con planilla, radio, silba, baila, duerme la siesta |
 - **El anó y el loro vuelan por toda la pantalla** (luces, lámpara, manómetro, arbolito, panel).
 - **Escenas entre animales**: el pinscher se pelea con el anó · el ratón le roba la chipa al chanchito · el ratón le roba la llave al pinscher · el ratón se roba la estrella del arbolito · el loro imita al pinscher · el oso le convida tereré al conejo.
+- **Paradas del reloj** (cada 3–4 min): el ratón roba el perno del engranaje maestro, el anó provoca un apagón o el pinscher traba los engranajes con la llave. El reloj se congela, suenan las balizas y todos ayudan a repararlo; al final alguien **calibra el reloj** con la hora oficial (los dígitos giran hasta la hora real).
 - **Batería “Nivel de carga del aguinaldo”** (avance del año hasta la fecha objetivo).
 - **Cartel LED** con avisos del taller.
 - Al llegar a cero: **“¡LLEGÓ EL AGUINALDO!”**, fiesta de todos los personajes, confeti y billetes.
@@ -29,7 +31,8 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
 ## Parámetros de URL
 - `?fecha=2026-12-15T08:00` → cambia la fecha/hora objetivo (hora de Paraguay).
 - `?demo=20` → prueba: la cuenta llega a cero en 20 segundos.
-- `?escena=0` … `?escena=5` → muestra una escena entre animales puntual.
+- `?escena=0` … `?escena=6` → muestra una escena entre animales puntual.
+- `?parada=0` … `?parada=2` → muestra una parada puntual (perno robado, apagón, atasco).
 
 ## Desarrollo y despliegue (Cloudflare Workers – Static Assets)
 ```bash

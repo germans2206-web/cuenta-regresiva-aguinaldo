@@ -74,6 +74,7 @@ const FUR = '#8a5a3b', MUZ = '#d9b08c', BLUE = '#2f6fb3';
 const bear = {
   id: 'bear', name: 'Oso', vb: [300, 270], anchor: [120, 262], scale: 1.0,
   station: { x: 390, y: 1046 }, layer: 'front', enter: 'walkL', gap: 0.7,
+  travel: 'walk', roamChance: 0.5, spots: [{ x: 390, y: 1046 }, { x: 620, y: 1046 }, { x: 880, y: 1046 }],
   svg: `
 <defs><radialGradient id="bearGlow"><stop offset="0" stop-color="#f2fbff" stop-opacity="1"/><stop offset=".25" stop-color="#9fd8ff" stop-opacity=".7"/><stop offset="1" stop-color="#7fc8ff" stop-opacity="0"/></radialGradient></defs>
 <ellipse cx="135" cy="262" rx="100" ry="8" fill="rgba(0,0,0,.35)"/>
@@ -200,7 +201,7 @@ const birdWingsOut = `<g ${S('92 118', 'osc .25s ease-in-out infinite alternate'
 const bird = {
   id: 'bird', name: 'Anó', vb: [220, 200], anchor: [100, 188], scale: 0.9,
   station: { x: 1250, y: 0 }, perchOnLights: true, layer: 'front', enter: 'fly', gap: 0.4,
-  travel: 'fly', roamChance: 0.75,
+  travel: 'fly', roamChance: 0.85,
   spots: [
     { lights: 1250 }, { lights: 640 }, { lights: 1640 }, { lights: 330 },
     { x: 300, y: 202 }, { x: 1770, y: 268 }, { x: 1830, y: 608 }, { x: 1180, y: 238 },
@@ -368,6 +369,7 @@ const WH = '#f4efe6', PK = '#f4a6b8';
 const rabbit = {
   id: 'rabbit', name: 'Conejo', vb: [320, 280], anchor: [160, 272], scale: 0.95,
   station: { x: 1010, y: 1046 }, layer: 'front', enter: 'ride', gap: 0.5,
+  travel: 'ride', roamChance: 0.6, spots: [{ x: 1010, y: 1046 }, { x: 640, y: 1046 }, { x: 1300, y: 1046 }, { x: 440, y: 1046 }],
   svg: `
 <ellipse cx="164" cy="270" rx="120" ry="8" fill="rgba(0,0,0,.35)"/>
 <g class="A a-power">
@@ -633,6 +635,7 @@ const PIG = '#f7a8bd', PIGD = '#e47b98', GRN = '#1f8a52';
 const pig = {
   id: 'pig', name: 'Chanchito', vb: [280, 240], anchor: [110, 232], scale: 0.95,
   station: { x: 690, y: 1046 }, layer: 'front', enter: 'walkL', gap: 0.6,
+  travel: 'walk', roamChance: 0.5, spots: [{ x: 690, y: 1046 }, { x: 480, y: 1046 }, { x: 960, y: 1046 }, { x: 1180, y: 1046 }],
   svg: `
 <ellipse cx="116" cy="232" rx="70" ry="7" fill="rgba(0,0,0,.35)"/>
 <g class="A a-oil"><g ${S('232 200', 'spin 3s linear infinite')}><path d="${gearPath(232, 200, 30, 10, 12)}" fill="#c9a227" fill-rule="evenodd" ${ol(3)}/></g></g>
@@ -727,7 +730,7 @@ const MG = '#9aa3ad', MGL = '#c7ced6', MP = '#f4a6b8';
 const mouse = {
   id: 'mouse', name: 'Ratón', vb: [260, 200], anchor: [90, 192], scale: 0.9,
   station: { x: 566, y: 242 }, layer: 'back', enter: 'peekup', gap: 0.4,
-  travel: 'ground', roamChance: 0.7, tripChance: 0.4,
+  travel: 'ground', roamChance: 0.8, tripChance: 0.45,
   spots: [
     { x: 566, y: 242, level: 'top' }, { x: 1320, y: 238, level: 'top' }, { x: 960, y: 238, level: 'top' },
     { x: 540, y: 1046, level: 'floor' }, { x: 850, y: 1046, level: 'floor' }, { x: 1150, y: 1046, level: 'floor' }, { x: 1460, y: 1046, level: 'floor' },
@@ -901,4 +904,105 @@ const parrot = {
   ],
 };
 
-export const CHARACTERS = [bear, bird, octo, rabbit, duck, pinscher, pig, mouse, parrot];
+/* =====================================================================
+   MONO TRAVIESO (mucha personalidad, salta por todos lados)
+   ===================================================================== */
+const MK = '#7b4a2a', MKF = '#f0c9a0', MKD = '#5a3319';
+const monkeyArmsUp = `${limb('M80 160 Q60 120 78 92', MK, 13)}${limb('M140 160 Q160 120 142 92', MK, 13)}`;
+const monkey = {
+  id: 'monkey', name: 'Mono', vb: [240, 260], anchor: [110, 252], scale: 0.9,
+  station: { x: 1180, y: 238 }, layer: 'front', enter: 'leap', gap: 0.4,
+  travel: 'leap', roamChance: 0.8,
+  spots: [
+    { x: 1180, y: 238 }, { x: 760, y: 238 }, { x: 300, y: 202 }, { x: 1680, y: 405 },
+    { x: 560, y: 1046 }, { x: 900, y: 1046 }, { x: 1440, y: 1046 }, { x: 205, y: 456 }, { x: 1830, y: 606 },
+  ],
+  svg: `
+<ellipse cx="112" cy="252" rx="56" ry="6" fill="rgba(0,0,0,.3)"/>
+<g class="A a-drum"><path d="M150 206 h64 l-6 46 h-52 z" fill="#2b6cb0" ${ol()}/><ellipse cx="182" cy="206" rx="32" ry="8" fill="#9aa3ad" ${ol(3)}/><path d="M154 226 h56" stroke="#ffd23f" stroke-width="5"/></g>
+<g class="A a-switch">
+  <rect x="160" y="120" width="56" height="110" rx="6" fill="#59616d" ${ol()}/>
+  <rect x="168" y="128" width="40" height="14" fill="#ffc21a" ${ol(2)}/><text x="188" y="139" text-anchor="middle" font-family="Chakra Petch" font-weight="700" font-size="9" fill="#111">TÉRMICA</text>
+  <g ${S('188 186', 'lever 2.4s ease-in-out infinite')}><rect x="184" y="150" width="9" height="40" rx="3" fill="#c7ced6" ${ol(2)}/><circle cx="188" cy="150" r="9" fill="#e2283b" ${ol(2)}/></g>
+  <circle cx="176" cy="214" r="5" fill="#3dff7a" style="animation:flick .4s infinite"/>
+</g>
+<g class="root" ${S('110 252')}>
+  <g ${S('76 206', 'osc 1.3s ease-in-out infinite alternate', '--a:-10deg;--b:12deg')}><path d="M78 206 Q30 214 26 170 Q24 130 54 128 Q72 130 66 148" fill="none" stroke="${O}" stroke-width="12" stroke-linecap="round"/><path d="M78 206 Q30 214 26 170 Q24 130 54 128 Q72 130 66 148" fill="none" stroke="${MK}" stroke-width="6" stroke-linecap="round"/></g>
+  <g class="legs">${limb('M96 210 Q86 230 90 248', MK, 13)}${limb('M126 210 Q136 230 132 248', MK, 13)}<ellipse cx="86" cy="250" rx="13" ry="6" fill="${MKF}" ${ol(3)}/><ellipse cx="136" cy="250" rx="13" ry="6" fill="${MKF}" ${ol(3)}/></g>
+  <ellipse cx="110" cy="178" rx="38" ry="42" fill="${MK}" ${ol()}/>
+  <ellipse cx="112" cy="186" rx="24" ry="28" fill="${MKF}"/>
+  <rect x="74" y="200" width="74" height="12" rx="4" fill="#3b2b22" ${ol(3)}/>
+  <rect x="86" y="196" width="10" height="22" rx="2" fill="#c7ced6" ${ol(2)}/><rect x="124" y="196" width="8" height="20" rx="2" fill="#e2283b" ${ol(2)}/>
+  <g class="d-al">${limb('M80 160 Q58 196 66 228', MK, 13)}</g>
+  <g class="d-ar">${limb('M140 160 Q162 196 154 228', MK, 13)}</g>
+  <g class="head" ${S('112 140')}>
+    <circle cx="66" cy="102" r="17" fill="${MK}" ${ol()}/><circle cx="66" cy="102" r="9" fill="${MKF}"/>
+    <circle cx="158" cy="102" r="17" fill="${MK}" ${ol()}/><circle cx="158" cy="102" r="9" fill="${MKF}"/>
+    <circle cx="112" cy="100" r="40" fill="${MK}" ${ol()}/>
+    <path d="M86 96 Q86 80 100 82 Q112 86 124 82 Q138 80 138 96 Q144 126 112 132 Q80 126 86 96 Z" fill="${MKF}" ${ol(3)}/>
+    <g class="d-eyes">${eye(101, 96, 5.5)}${eye(124, 96, 5.5)}</g>
+    <path d="M94 84 l12 4 M130 84 l-12 4" stroke="${MKD}" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="108" cy="110" rx="2.5" ry="2" fill="${O}"/><ellipse cx="117" cy="110" rx="2.5" ry="2" fill="${O}"/>
+    <g class="d-mouth"><path d="M96 118 Q112 132 128 118 Q112 124 96 118 Z" fill="#fff" ${ol(2.5)}/></g>
+    <g class="A a-chest a-laugh a-flip"><path d="M94 116 Q112 142 130 116 Z" fill="#7a1f1f" ${ol(3)}/><path d="M100 117 h24" stroke="#fff" stroke-width="4"/></g>
+    <g class="A a-banana"><ellipse cx="112" cy="122" rx="9" ry="6" fill="#7a1f1f" ${ol(2)}/></g>
+    <g class="A a-laugh a-banana"><path d="M94 96 q7 -8 14 0 M118 96 q7 -8 14 0" fill="none" ${ol(4)}/></g>
+    <g transform="rotate(-16 112 62)">
+      <path d="M78 70 Q80 40 110 38 Q140 40 144 68 Z" fill="#ffc21a" ${ol(3)}/>
+      <path d="M110 40 v28" stroke="#e0a000" stroke-width="5"/>
+      <rect x="70" y="64" width="80" height="10" rx="5" fill="#ffb000" ${ol(2.5)}/>
+      <circle cx="128" cy="54" r="7" fill="#3dff7a" ${ol(2)}/><text x="128" y="58" text-anchor="middle" font-size="9" font-weight="800" font-family="Baloo 2">☺</text>
+    </g>
+  </g>
+  <g class="A a-banana">
+    <g ${S('140 160', 'osc .5s ease-in-out infinite alternate', '--a:-6deg;--b:8deg')}>
+      ${limb('M140 160 Q160 140 132 122', MK, 13)}
+      <path d="M126 122 Q118 98 128 82 Q140 98 134 124 Z" fill="#ffe14d" ${ol(3)}/>
+      <path d="M128 122 Q140 132 150 150 M130 124 Q120 136 116 152" stroke="#e8c400" stroke-width="7" stroke-linecap="round" fill="none"/>
+    </g>
+  </g>
+  <g class="A a-drum">
+    <g ${S('140 160', 'osc .18s ease-in-out infinite alternate', '--a:-25deg;--b:15deg')}>${limb('M140 160 Q168 170 176 196', MK, 13)}${limb('M176 196 L196 186', '#c7ced6', 6)}</g>
+    <g ${S('80 160', 'osc .18s .09s ease-in-out infinite alternate', '--a:20deg;--b:-10deg')}>${limb('M80 160 Q130 186 166 198', MK, 13)}</g>
+    ${popTxt(210, 160, '¡PUM!', 22, '#ffd23f', 0.36)}${floatTxt(200, 120, '♪', 26, '#ff7bd5', 1.2, 0, 20, -60)}
+  </g>
+  <g class="A a-chest">
+    <g ${S('80 160', 'osc .22s ease-in-out infinite alternate', '--a:-30deg;--b:10deg')}>${limb('M80 160 Q86 186 104 176', MK, 13)}</g>
+    <g ${S('140 160', 'osc .22s .11s ease-in-out infinite alternate', '--a:30deg;--b:-10deg')}>${limb('M140 160 Q134 186 118 176', MK, 13)}</g>
+    ${popTxt(196, 60, '¡UH UH AH AH!', 22, '#ffd23f', 0.9)}
+  </g>
+  <g class="A a-juggle a-install a-laugh a-flip a-selfie-x">${monkeyArmsUp}</g>
+  <g class="A a-juggle">${[0, -0.4, -0.8].map((d) => `<g ${S('110 30', `spin 1.2s ${d}s linear infinite`)}>${WRENCH(110, -10, 0)}</g>`).join('')}</g>
+  <g class="A a-selfie">
+    ${limb('M80 160 Q66 196 70 222', MK, 13)}
+    <g ${S('140 160', 'osc 1s ease-in-out infinite alternate', '--a:-4deg;--b:4deg')}>${limb('M140 160 Q178 134 186 98', MK, 13)}<rect x="176" y="62" width="26" height="44" rx="5" fill="#222831" ${ol(3)}/><rect x="180" y="68" width="18" height="30" fill="#4fc3ff"/><circle cx="189" cy="70" r="16" fill="#fff" style="animation:zapflash 1.6s steps(1) infinite"/></g>
+    <text x="54" y="80" font-size="30">✌️</text>
+  </g>
+  <g class="A a-install"><g ${S('110 70', 'jit .12s infinite')}>${hex(110, 70, 20, '#ffd23f')}</g>${sparks(110, 70, 8, 50)}</g>
+  <g class="A a-switch">${limb('M80 160 Q60 196 66 228', MK, 13)}<g ${S('140 160', 'lever 2.4s ease-in-out infinite')}>${limb('M140 160 Q170 150 188 152', MK, 13)}</g></g>
+  <g class="A a-laugh">${popTxt(60, 70, 'JAJAJA', 24, '#ffd23f', 0.8)}${popTxt(190, 90, 'JIJI', 20, '#ffd23f', 0.8, 0.4)}</g>
+</g>`,
+  css: `
+.c-monkey.act-banana .root{animation:bob .35s ease-in-out infinite;--y:-3px}
+.c-monkey.act-drum .root{animation:bob .18s ease-in-out infinite;--y:-4px}
+.c-monkey.act-drum .head{animation:wobblehead .36s ease-in-out infinite}
+.c-monkey.act-flip .root{animation:flipback 1.1s ease-in-out infinite}
+.c-monkey.act-chest .root{animation:bob .22s ease-in-out infinite;--y:-6px}
+.c-monkey.act-juggle .head{animation:osc .6s ease-in-out infinite alternate;--a:-6deg;--b:6deg}
+.c-monkey.act-laugh .root{animation:osc .18s ease-in-out infinite alternate;--a:-8deg;--b:8deg}
+.c-monkey.act-selfie .head{transform:rotate(-10deg);transition:transform .3s}
+.c-monkey.act-install .root{animation:jit .1s infinite}`,
+  actions: [
+    { id: 'banana', dur: 4, hide: ['d-ar', 'd-eyes', 'd-mouth'], say: ['Banana de la merienda 🍌 …la cáscara la dejo por ahí 😏', 'Potasio para aguantar hasta el 15 🍌'] },
+    { id: 'drum', dur: 4, hide: ['d-al', 'd-ar'], say: ['¡Ritmo de taller! 🥁 ¡Pum pa pum!', 'Batería de llaves y baldes, ¡todos a bailar!'] },
+    { id: 'flip', dur: 3.3, hide: ['d-al', 'd-ar', 'd-mouth'], say: ['¡Mortal hacia atrás! 🤸', '¿Viste eso? ¡Diez puntos!'] },
+    { id: 'chest', dur: 3.2, hide: ['d-al', 'd-ar', 'd-mouth'], say: ['¡UH UH AH AH! ¡El aguinaldo es mío! 🐒', '¡Soy el rey del taller!'] },
+    { id: 'juggle', dur: 3.8, hide: ['d-al', 'd-ar'], say: ['Malabares con llaves 14, 17 y 19 🔧', '¡Mirá, sin red de seguridad!'] },
+    { id: 'selfie', dur: 3.8, hide: ['d-al', 'd-ar'], say: ['Selfie con el reloj del aguinaldo 🤳 #FaltaPoco', 'Sonrían, que va para el grupo del taller 📸'] },
+    { id: 'install', scene: true, hide: ['d-al', 'd-ar'] },
+    { id: 'switch', scene: true, hide: ['d-al', 'd-ar'] },
+    { id: 'laugh', scene: true, hide: ['d-al', 'd-ar', 'd-eyes', 'd-mouth'] },
+  ],
+};
+
+export const CHARACTERS = [bear, bird, octo, rabbit, duck, pinscher, pig, mouse, parrot, monkey];

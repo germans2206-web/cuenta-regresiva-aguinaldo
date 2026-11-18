@@ -1,4 +1,4 @@
-import { buildMachine, lightsY } from './machine.js';
+import { buildMachine, lightsY, machineCtl } from './machine.js';
 import { CHARACTERS } from './characters.js';
 
 /* ------------------------------------------------------------------
@@ -73,6 +73,17 @@ const pad = (n) => String(n).padStart(2, '0');
 $('#targetLabel').textContent = `${pad(TARGET.getDate())}/${pad(TARGET.getMonth() + 1)}/${TARGET.getFullYear()}`;
 export const remain = { d: 0, h: 0, m: 0, s: 0, ms: 0 };
 let lastSec = -1, finished = false;
+const clockState = { stopped: false, frozen: 0, calibrating: false };
+const panelEl = $('#panel');
+function renderMs(ms) {
+  const sec = Math.floor(Math.max(0, ms) / 1000);
+  renderUnit('d', Math.floor(sec / 86400), 2); renderUnit('h', Math.floor((sec % 86400) / 3600));
+  renderUnit('m', Math.floor((sec % 3600) / 60)); renderUnit('s', sec % 60);
+}
+function setStatus(text, cls = '') {
+  $('#statusLabel').textContent = text;
+  const st = $('.status'); st.classList.remove('alert', 'ok'); if (cls) st.classList.add(cls);
+}
 function tick() {
   const ms = Math.max(0, TARGET - Date.now());
   const sec = Math.floor(ms / 1000);
@@ -81,7 +92,7 @@ function tick() {
   remain.m = Math.floor((sec % 3600) / 60); remain.s = sec % 60;
   if (sec !== lastSec) {
     lastSec = sec;
-    renderUnit('d', remain.d, 2); renderUnit('h', remain.h); renderUnit('m', remain.m); renderUnit('s', remain.s);
+    if (!clockState.stopped && !clockState.calibrating) renderMs(ms);
     $('#clock').classList.toggle('wide', remain.d > 99);
     const pct = Math.min(100, Math.max(0, ((Date.now() - YEAR_START) / (TARGET - YEAR_START)) * 100));
     $('#batteryFill').style.width = pct.toFixed(2) + '%';
@@ -91,7 +102,7 @@ function tick() {
     }
     if (ms === 0 && !finished) { finished = true; celebrate(); }
   }
-  document.querySelectorAll('.sep').forEach((s) => s.classList.toggle('off', (ms % 1000) < 500 && ms > 0));
+  document.querySelectorAll('.sep').forEach((s) => s.classList.toggle('off', clockState.stopped || ((ms % 1000) < 500 && ms > 0)));
   requestAnimationFrame(tick);
 }
 tick();
@@ -109,15 +120,20 @@ const MESSAGES = [
   'SEGURIDAD PRIMERO: CASCO, LENTES Y BOTINES',
   '¡FELIZ NAVIDAD, EQUIPO DE MANTENIMIENTO! 🎄',
 ];
+const ALARM = ['⚠ PARADA DE EMERGENCIA — RELOJ DETENIDO ⚠', 'TODO EL EQUIPO DE MANTENIMIENTO AL TALLER', '⚠ NO SE PREOCUPEN: EL AGUINALDO SIGUE EN PIE ⚠'];
+let tickerAlarm = false, tickerAnim = null;
 const track = $('#tickerTrack');
+function setTickerAlarm(on) { if (on === tickerAlarm) return; tickerAlarm = on; tickerAnim?.cancel(); runTicker(); }
 function runTicker() {
-  track.innerHTML = MESSAGES.map((m) => `<span>${fill(m)}</span>`).join('');
+  track.innerHTML = (tickerAlarm ? ALARM : MESSAGES).map((m) => `<span>${fill(m)}</span>`).join('');
+  track.style.color = tickerAlarm ? '#ff5a3c' : '';
   const win = track.parentElement.clientWidth;
   const w = track.scrollWidth;
   const anim = track.animate(
     [{ transform: `translate(${win}px,-50%)` }, { transform: `translate(${-w}px,-50%)` }],
     { duration: ((win + w) / 150) * 1000, easing: 'linear' }
   );
+  tickerAnim = anim;
   anim.onfinish = runTicker;
 }
 document.fonts.ready.then(runTicker);
@@ -140,7 +156,7 @@ const bubblesLayer = $('#bubbles');
 const fxLayer = $('#fx');
 let activeBubbles = 0;
 const FLOOR = 1046;
-const SPEED = { walk: 0.42, run: 0.95, sneak: 0.22, fly: 0.75, jump: 0.85, ride: 0.8 };
+const SPEED = { walk: 0.42, run: 0.95, sneak: 0.22, fly: 0.75, jump: 0.85, ride: 0.6, leap: 0.95 };
 
 class Actor {
   constructor(def) {
@@ -241,7 +257,7 @@ class Actor {
       const mx = (this.pos.x + nx) / 2, my = Math.min(this.pos.y, ny) - o.arc;
       frames = [{ transform: from, easing: 'ease-out' }, { transform: `translate(${mx}px, ${my}px)`, easing: 'ease-in' }, { transform: to }];
     }
-    const cls = { walk: 'walking', run: 'walking', sneak: 'walking', fly: 'flying', ride: 'riding' }[mode];
+    const cls = { walk: 'walking', run: 'walking', sneak: 'walking', fly: 'flying', ride: 'riding', leap: 'leaping' }[mode];
     if (cls) this.el.classList.add(cls);
     if (mode === 'sneak') this.el.classList.add('sneaking');
     if (o.face !== false) this.el.classList.toggle('face-left', dx < -2);
@@ -250,13 +266,20 @@ class Actor {
     this.pos = { x: nx, y: ny };
     this.el.style.transform = to;
     a.cancel();
-    this.el.classList.remove('walking', 'flying', 'riding', 'sneaking');
+    this.el.classList.remove('walking', 'flying', 'riding', 'sneaking', 'leaping');
+    if (mode === 'leap' && y > 1000) this.dust(8);
     if (!o.keepFace) this.el.classList.remove('face-left');
   }
   // Viaje entre puntos (los voladores vuelan; el ratón corre y salta entre el panel y el piso)
   async travelTo(s) {
-    if (this.def.travel === 'fly') {
+    const t = this.def.travel;
+    if (t === 'fly') {
       await this.moveTo(s.x, s.y, { mode: 'fly', arc: 70 + Math.random() * 90 });
+    } else if (t === 'leap') {
+      this.setLayer('front');
+      await this.moveTo(s.x, s.y, { mode: 'leap', arc: 160 + Math.random() * 140 });
+    } else if (t === 'walk' || t === 'ride') {
+      await this.moveTo(s.x, s.y, { mode: t });
     } else {
       const cur = this.spot || this.spots[0];
       if (cur && cur.level !== s.level) {
@@ -289,15 +312,19 @@ class Actor {
         await this.moveTo(st.x, st.y, { mode: 'none', dur: 160, easing: 'ease-in' });
         break;
       case 'peekup': this.place(st.x, st.y + 200); await this.moveTo(st.x, st.y, { mode: 'none', dur: 1000, easing: 'cubic-bezier(.3,1.4,.5,1)' }); break;
+      case 'leap': this.place(st.x < 960 ? -200 : 2120, FLOOR); await this.moveTo(st.x, st.y, { mode: 'leap', arc: 320 }); break;
     }
     this.spot = this.spots[0] || null;
   }
   async exit() {
     const d = this.def, st = this.st;
-    if (d.travel === 'fly') {
+    if (d.travel === 'leap') {
+      await this.moveTo(this.x > 960 ? 2150 : -230, Math.min(this.y, 700), { mode: 'leap', arc: 200 });
+    } else if (d.travel === 'fly') {
       const right = this.x > 960;
       await this.moveTo(right ? 2200 : -300, this.y - 520, { mode: 'fly', dur: 1800, easing: 'ease-in' });
     } else if (d.travel === 'ground') {
+      if (this.spot?.level === 'air') await this.moveTo(this.x, FLOOR, { mode: 'jump', arc: 60 });
       if (this.spot?.level === 'top' && this.atHome()) {
         await this.moveTo(st.x, st.y + 200, { mode: 'none', dur: 700, easing: 'ease-in' });
       } else {
@@ -517,13 +544,274 @@ const SCENES = [
       await O.exit();
     },
   },
+  {
+    // El mono deja la cáscara de banana y el chanchito se resbala
+    cast: ['monkey', 'pig'],
+    async run() {
+      const K = A.monkey, G = A.pig;
+      await come(K, 860, FLOOR);
+      K.act('banana'); K.say('Banana rica… y la cáscara… ¡al piso! 😏', 2800, true);
+      await sleep(3000);
+      const peel = document.createElement('div');
+      peel.className = 'peel'; peel.textContent = '🍌';
+      Object.assign(peel.style, { left: '640px', top: FLOOR - 40 + 'px' });
+      fxLayer.appendChild(peel);
+      peel.animate([{ transform: 'translate(220px,-160px) rotate(0)' }, { transform: 'translate(0,0) rotate(540deg)' }], { duration: 700, easing: 'ease-in' });
+      K.act('laugh'); await sleep(900); K.act(null);
+      await G.enter();
+      G.act('slip'); G.say('¡¿QUIÉN DEJÓ ESTA CÁSCARA?! 🍌', 3000, true);
+      await sleep(900);
+      K.act('laugh'); K.say('¡JAJAJA! ¡Clásico de los clásicos! 🐒', 3000, true);
+      await sleep(3600);
+      G.act('angry'); G.say('¡Mono, vení a limpiar esto! 😤', 2600, true);
+      K.act('flip'); await sleep(2400);
+      peel.remove(); K.act(null); G.act(null);
+      await Promise.all([K.exit(), sleep(500).then(() => G.exit())]);
+    },
+  },
 ];
+
+/* ---------------- Paradas del reloj: todos ayudan a repararlo ---------------- */
+const BD = { active: false };
+const stageEl = $('#stage');
+function stopClock(msg) {
+  clockState.stopped = true;
+  clockState.frozen = Math.max(0, TARGET - Date.now());
+  panelEl.classList.add('frozen');
+  stageEl.classList.add('alarm');
+  setStatus(msg || '⚠ PARADA', 'alert');
+  setTickerAlarm(true);
+}
+async function calibrate(dur = 4200) {
+  clockState.calibrating = true; clockState.stopped = false;
+  panelEl.classList.remove('frozen'); panelEl.classList.add('calibrating');
+  setStatus('CALIBRANDO CON HORA OFICIAL…', 'ok');
+  const from = clockState.frozen, t0 = performance.now();
+  await new Promise((res) => {
+    const step = () => {
+      const k = Math.min(1, (performance.now() - t0) / dur);
+      const real = Math.max(0, TARGET - Date.now());
+      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      let v = from + (real - from) * e;
+      if (k < 0.8) v += (Math.random() - 0.5) * 7200000 * (1 - k);   // los dígitos "giran" buscando la hora
+      renderMs(v);
+      if (k < 1) requestAnimationFrame(step); else res();
+    };
+    step();
+  });
+  renderMs(Math.max(0, TARGET - Date.now()));
+  setStatus('CALIBRADO ✔', 'ok');
+  clockState.calibrating = false;
+  await sleep(2200);
+  panelEl.classList.remove('calibrating');
+  setStatus('EN PROCESO');
+}
+function restartMachine() {
+  machineCtl.start();
+  stageEl.classList.remove('alarm', 'blackout', 'flicker');
+  window.scene3d?.dim(false);
+  setTickerAlarm(false);
+  setStatus('ARRANCANDO…', 'ok');
+}
+async function recruit(ids, min = 3, wait = 10000) {
+  const t0 = performance.now(), got = [];
+  while (performance.now() - t0 < wait) {
+    for (const id of ids) if (!A[id].busy && !got.includes(A[id])) { A[id].busy = true; got.push(A[id]); }
+    if (got.length === ids.length || (got.length >= min && performance.now() - t0 > 2500)) break;
+    await sleep(500);
+  }
+  return got;
+}
+// Lleva a un personaje a (x, y) según su forma de moverse
+async function come(a, x, y) {
+  const t = a.def.travel;
+  if (t === 'fly') { a.setLayer('front'); a.show(); a.place(x < 960 ? -260 : 2180, y - 420); await a.moveTo(x, y, { mode: 'fly', dur: 1700, easing: 'ease-out' }); a.spot = { x, y, level: 'air' }; return; }
+  if (t === 'leap') { a.setLayer('front'); a.show(); a.place(x < 960 ? -200 : 2120, FLOOR); await a.moveTo(x, y, { mode: 'leap', arc: 300 }); a.spot = { x, y, level: 'air' }; return; }
+  if (t === 'ground') {
+    a.setLayer('front'); a.show(); a.place(x < 960 ? -120 : 2040, FLOOR);
+    await a.moveTo(x, FLOOR, { mode: 'run' });
+    if (y < FLOOR - 10) await a.moveTo(x, y, { mode: 'jump', arc: 140, speed: 0.8 });
+    a.spot = { x, y, level: y < 300 ? 'top' : y < FLOOR - 10 ? 'air' : 'floor' };
+    if (y < 300) a.setLayer('back');
+    return;
+  }
+  await a.enter();
+  if (x != null && Math.abs(a.x - x) > 4) await a.moveTo(x, a.st.y, { mode: t === 'ride' ? 'ride' : 'walk' });
+}
+const pickFirst = (team, ids, visibleOnly = true) => ids.map((id) => A[id]).find((a) => team.includes(a) && (!visibleOnly || a.el.classList.contains('on')));
+async function celebrateFix(team) {
+  team = team.filter((a) => a.el.classList.contains('on'));
+  const happy = { bear: 'dance', duck: 'quack', monkey: 'flip', parrot: 'dance', pig: 'dream', rabbit: 'wheelie', octo: 'wave', bird: 'sing', pinscher: 'win', mouse: 'salute' };
+  const lines = ['¡Reloj en marcha! 🎉', '¡Trabajo en equipo! 💪', '¡Así se hace, taller!', '¡Sigue la cuenta al aguinaldo!'];
+  team.forEach((a, i) => { a.act(happy[a.def.id]); if (i < 3) setTimeout(() => a.say(lines[i % lines.length], 2600, true), i * 500); });
+  await sleep(4200);
+  team.forEach((a) => a.act(null));
+  await Promise.all(team.map((a, i) => sleep(i * 350).then(() => a.exit())));
+}
+
+const BREAKDOWNS = [
+  {
+    // 1) El ratón se roba el perno del engranaje maestro
+    instigator: 'mouse',
+    async run() {
+      const M = A.mouse, m = machineCtl.master;
+      await M.enter(); M.act('flash'); M.say('¿Y esa pieza dorada tan brillante? 👀', 2600, true);
+      await sleep(2600); M.act(null);
+      M.setLayer('front');
+      await M.moveTo(m.x - 6, m.y + 46, { mode: 'jump', arc: 160, speed: 0.6 }); M.spot = { level: 'air' };
+      M.act('grab'); await sleep(900);
+      machineCtl.pin(false); M.act('loot-gear');
+      machineCtl.stop(1800); stopClock('⚠ PARADA: FALTA PERNO MAESTRO');
+      M.say('¡Uy…! Creo que era importante 😬', 2600, true);
+      await sleep(1600);
+      await M.moveTo(m.x - 60, FLOOR, { mode: 'jump', arc: 60 });
+      await M.moveTo(-140, FLOOR, { mode: 'run', speed: 1.1 });
+      M.resetHome();
+
+      const team = await recruit(['parrot', 'octo', 'monkey', 'duck', 'bear', 'pig', 'rabbit', 'bird', 'pinscher']);
+      const has = (id) => team.includes(A[id]);
+      const jobs = [];
+      if (has('parrot')) jobs.push(come(A.parrot, 1150, 238).then(async () => { A.parrot.act('snitch'); A.parrot.say('¡PARADA! ¡PARADA! ¡El ratón se llevó el perno maestro! 🦜', 3000, true); await sleep(3000); A.parrot.act('radio'); A.parrot.say('Central: reloj detenido. Pedimos apoyo a todo el taller 📻', 3200, true); }));
+      if (has('octo')) jobs.push(sleep(800).then(() => A.octo.enter()).then(async () => { A.octo.act('check'); A.octo.say('Diagnóstico: falta el perno del engranaje maestro 📋', 3000, true); await sleep(3200); A.octo.act('multi'); }));
+      if (has('bird')) jobs.push(sleep(1500).then(() => come(A.bird, 1440, lightsY(1440) + 6)).then(() => { A.bird.act('pull'); }));
+      if (has('bear')) jobs.push(sleep(400).then(() => come(A.bear, 880, FLOOR)).then(() => { A.bear.act('weld'); A.bear.say('Soldadura de refuerzo: ¡este no se lo roban más! 🔥', 3000, true); }));
+      if (has('pig')) jobs.push(sleep(1200).then(() => come(A.pig, 1440, FLOOR)).then(() => { A.pig.act('oil'); }));
+      if (has('pinscher')) jobs.push(sleep(2000).then(() => A.pinscher.enter()).then(() => { A.pinscher.act('struggle'); A.pinscher.say('¡Ajustando el bulón de seguridad! 😤', 2600, true); }));
+      await Promise.all(jobs);
+      await sleep(1500);
+      // Instalación del perno nuevo
+      const installer = pickFirst(team, ['monkey', 'duck', 'octo'], false);
+      if (installer?.def.id === 'monkey') {
+        await come(A.monkey, m.x, m.y + 50);
+        A.monkey.act('install'); A.monkey.say('¡Yo lo pongo! ¡Mono mecánico al rescate! 🐒🔧', 3000, true);
+        await sleep(3000); machineCtl.pin(true); A.monkey.act('chest');
+      } else if (installer?.def.id === 'duck') {
+        await A.duck.enter(); A.duck.act('change'); A.duck.say('Perno nuevo instalado desde la escalera ⛑️', 3000, true);
+        await sleep(3200); machineCtl.pin(true);
+      } else { await sleep(2500); machineCtl.pin(true); }
+      if (has('pinscher')) A.pinscher.act('win');
+      // Arranque
+      if (has('rabbit')) { await come(A.rabbit, 600, FLOOR); A.rabbit.act('power'); A.rabbit.say('¡Pedaleo para el arranque! ⚡⚡', 2800, true); await sleep(2200); }
+      restartMachine();
+      await sleep(1500);
+      // El ratón vuelve arrepentido y calibra el reloj
+      M.busy = true; M.setLayer('back'); M.show(); M.place(566, 442);
+      await M.moveTo(566, 242, { mode: 'none', dur: 900, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+      M.act('tablet'); M.say('Perdón… 😇 Para compensar, calibro el reloj con la hora oficial', 3600, true);
+      await calibrate();
+      M.act('salute'); M.say('¡Hora sincronizada! Prometo no robar más… por hoy 🤞', 3000, true);
+      await celebrateFix([...team, M]);
+    },
+  },
+  {
+    // 2) El anó tironea un cable y deja al taller sin luz
+    instigator: 'bird',
+    async run() {
+      const B = A.bird;
+      await come(B, 1500, 528);
+      B.act('pull'); B.say('Este cable está medio flojo… lo ajusto 🐦', 2600, true);
+      await sleep(2800);
+      stageEl.classList.add('blackout'); window.scene3d?.dim(true);
+      machineCtl.stop(900); stopClock('⚠ APAGÓN');
+      B.act('peck'); B.say('…¡Uy! ¿Quién apagó la luz? 😳', 2600, true);
+      await sleep(2400); B.act(null);
+      const team = await recruit(['duck', 'rabbit', 'monkey', 'parrot', 'octo', 'bear', 'pig', 'mouse', 'pinscher']);
+      const has = (id) => team.includes(A[id]);
+      const jobs = [];
+      if (has('parrot')) jobs.push(come(A.parrot, 205, 456).then(async () => { A.parrot.act('radio'); A.parrot.say('Central: apagón total en el taller. ¡Generador de emergencia! 📻', 3200, true); }));
+      if (has('duck')) jobs.push(A.duck.enter().then(async () => { A.duck.act('measure'); A.duck.say('0 voltios… ¡corte total! Revisando fusibles ⚡', 3000, true); }));
+      if (has('mouse')) jobs.push(sleep(900).then(() => come(A.mouse, 960, 238)).then(() => { A.mouse.act('flash'); A.mouse.say('¡Yo alumbro con mi linterna! 🔦', 2600, true); }));
+      if (has('pig')) jobs.push(sleep(1600).then(() => come(A.pig, 480, FLOOR)).then(() => { A.pig.act('sweep'); }));
+      if (has('octo')) jobs.push(sleep(600).then(() => A.octo.enter()).then(() => { A.octo.act('ink'); A.octo.say('¡No veo nada! ¡Perdón por la tinta! 🐙', 2600, true); }));
+      await Promise.all(jobs);
+      await sleep(1200);
+      if (has('rabbit')) {
+        await come(A.rabbit, 1010, FLOOR); A.rabbit.act('power'); A.rabbit.say('¡Generador de emergencia a pedal! ⚡', 3000, true);
+        stageEl.classList.add('flicker'); await sleep(3000);
+      }
+      if (has('bear')) { await come(A.bear, 1180, FLOOR); A.bear.act('weld'); A.bear.say('Empalme soldado como corresponde 🔥', 2800, true); await sleep(2600); }
+      if (has('monkey')) {
+        await come(A.monkey, 1700, FLOOR); A.monkey.act('switch'); A.monkey.say('¡Subo la térmica! ¡CLICK! 🐒', 2600, true); await sleep(1400);
+      } else if (has('duck')) { A.duck.act('change'); A.duck.say('Fusible nuevo colocado ✅', 2600, true); await sleep(2600); }
+      else await sleep(1500);
+      B.act('tie'); B.say('Cable reconectado y precintado… perdón 😅', 3000, true);
+      restartMachine();
+      await sleep(2000); B.act(null);
+      const cal = pickFirst(team, ['duck', 'parrot', 'octo', 'mouse']);
+      if (cal) {
+        const act = { duck: 'measure', parrot: 'radio', octo: 'check', mouse: 'tablet' }[cal.def.id];
+        cal.act(act); cal.say('Sincronizando con la hora oficial de Paraguay… 🛰️', 3400, true);
+      }
+      await calibrate();
+      await celebrateFix([...team, B]);
+    },
+  },
+  {
+    // 3) El pinscher tira la llave y traba los engranajes
+    instigator: 'pinscher',
+    async run() {
+      const P = A.pinscher, m = machineCtl.master;
+      await P.enter(); P.act('struggle'); P.say('Este bulón me tiene harto… 😤', 2600, true);
+      await sleep(2800);
+      P.el.classList.add('no-wrench'); P.act('bark'); P.say('¡TOMÁ, LLAVE INÚTIL! ¡GUAU!', 2000, true);
+      const wr = document.createElement('div');
+      wr.className = 'stuck-wrench'; wr.textContent = '🔧';
+      Object.assign(wr.style, { left: m.x - 70 + 'px', top: m.y - 150 + 'px' });
+      fxLayer.appendChild(wr);
+      await wr.animate([{ transform: `translate(${P.x - m.x + 40}px, ${FLOOR - m.y + 60}px) rotate(0)` }, { transform: 'translate(0,0) rotate(900deg)' }], { duration: 900, easing: 'ease-out' }).finished;
+      wr.style.transform = 'rotate(900deg)';
+      machineCtl.jam(); stopClock('⚠ ATASCO EN TRANSMISIÓN');
+      P.act('tremble'); P.say('¡Ups! Se metió en el engranaje… 😰', 2800, true);
+      await sleep(1600);
+      const team = await recruit(['parrot', 'octo', 'monkey', 'pig', 'bear', 'rabbit', 'duck', 'bird', 'mouse']);
+      const has = (id) => team.includes(A[id]);
+      const jobs = [];
+      if (has('parrot')) jobs.push(come(A.parrot, 1680, 405).then(() => { A.parrot.act('snitch'); A.parrot.say('¡Atasco! ¡Atasco! ¡Fue el pinscher! 🦜', 3000, true); }));
+      if (has('octo')) jobs.push(A.octo.enter().then(() => { A.octo.act('multi'); A.octo.say('Con 8 brazos la saco en un segundo… o dos 🐙', 3000, true); }));
+      if (has('pig')) jobs.push(sleep(1000).then(() => come(A.pig, 1180, FLOOR)).then(() => { A.pig.act('oil'); A.pig.say('Aceite en los dientes del engranaje 🐷', 2600, true); }));
+      if (has('bear')) jobs.push(sleep(500).then(() => come(A.bear, 880, FLOOR)).then(() => { A.bear.act('hammer'); A.bear.say('Un golpecito técnico… ¡PUM! 🔨', 2600, true); }));
+      if (has('bird')) jobs.push(sleep(1500).then(() => come(A.bird, 1830, 608)).then(() => { A.bird.act('balance'); }));
+      if (has('mouse')) jobs.push(sleep(2000).then(() => come(A.mouse, 1320, 238)).then(() => { A.mouse.act('carry'); A.mouse.say('Traje un bulón nuevo para el pinscher 🐭', 2600, true); }));
+      await Promise.all(jobs);
+      await sleep(1500);
+      const fixer = pickFirst(team, ['monkey', 'octo', 'bear'], false);
+      if (fixer?.def.id === 'monkey') { await come(A.monkey, m.x - 40, m.y + 40); A.monkey.act('chest'); A.monkey.say('¡Me cuelgo del engranaje y lo destrabo! 🐒', 2800, true); await sleep(2400); A.monkey.act('flip'); }
+      else await sleep(2000);
+      machineCtl.unjam();
+      await wr.animate([{ transform: 'rotate(900deg)' }, { transform: 'translate(-160px,-200px) rotate(1200deg)', offset: 0.3 }, { transform: `translate(-300px, ${FLOOR - m.y + 120}px) rotate(1600deg)`, opacity: 0.2 }], { duration: 1300, easing: 'ease-in' }).finished;
+      wr.remove();
+      if (has('rabbit')) { await come(A.rabbit, 640, FLOOR); A.rabbit.act('power'); A.rabbit.say('¡Le doy impulso al arranque! ⚡', 2600, true); await sleep(2000); }
+      restartMachine();
+      P.el.classList.remove('no-wrench');
+      await sleep(1600);
+      const cal = pickFirst(team, ['octo', 'parrot', 'duck', 'mouse']) || P;
+      cal.act({ octo: 'check', parrot: 'radio', duck: 'measure', mouse: 'tablet', pinscher: 'tremble' }[cal.def.id]);
+      cal.say('Calibrando el reloj con la hora oficial ✔', 3400, true);
+      await calibrate();
+      P.say('Prometo no tirar más la llave… 😇', 2600, true);
+      await celebrateFix([...team, P]);
+    },
+  },
+];
+
 
 /* ---------------- Director de escena ---------------- */
 const director = {
   party: false,
   target: 3,
   nextScene: performance.now() + 25000,
+  nextBreakdown: performance.now() + 70000,
+  async breakdown(n) {
+    const opts = BREAKDOWNS.filter((b) => !A[b.instigator].busy);
+    const bd = n != null ? BREAKDOWNS[n % BREAKDOWNS.length] : pick(opts);
+    if (!bd) return false;
+    BD.active = true; A[bd.instigator].busy = true;
+    try { await bd.run(); } catch (e) { console.warn('parada', e); restartMachine(); clockState.stopped = false; clockState.calibrating = false; panelEl.classList.remove('frozen', 'calibrating'); }
+    actors.forEach((a) => { if (a.busy && !a.el.classList.contains('on')) { a.resetHome(); a.busy = false; a.lastShown = performance.now(); } });
+    A[bd.instigator].busy = false; A[bd.instigator].lastShown = performance.now();
+    BD.active = false;
+    return true;
+  },
   async scene() {
     const options = SCENES.filter((s) => free(...s.cast));
     if (!options.length) return false;
@@ -539,6 +827,12 @@ const director = {
     for (let i = 0; i < 3; i++) { first[i].run(); await sleep(rnd(1800, 3200)); }
     while (!this.party) {
       const now = performance.now();
+      if (BD.active) { await sleep(1000); continue; }
+      if (now > this.nextBreakdown) {
+        const opts = BREAKDOWNS.filter((b) => !A[b.instigator].busy);
+        if (opts.length) { this.nextBreakdown = Infinity; this.breakdown().then(() => { this.nextBreakdown = performance.now() + rnd(150000, 240000); }); await sleep(1000); continue; }
+        this.nextBreakdown = now + 5000;
+      }
       if (now > this.nextScene) {
         if (await this.scene()) this.nextScene = now + rnd(28000, 45000);
         else this.nextScene = now + 4000;
@@ -560,7 +854,9 @@ const director = {
   },
 };
 window.__scenes = SCENES; window.__director = director;
-if (params.has('escena')) {
+if (params.has('parada')) {
+  setTimeout(() => director.breakdown(parseInt(params.get('parada'), 10) || 0), 1200);
+} else if (params.has('escena')) {
   // ?escena=N  → prueba una escena puntual
   const n = parseInt(params.get('escena'), 10) || 0;
   setTimeout(() => { const s = SCENES[n % SCENES.length]; s.cast.forEach((id) => (A[id].busy = true)); s.run(); }, 1200);
