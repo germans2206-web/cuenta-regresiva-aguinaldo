@@ -24,6 +24,50 @@ function el(tag, attrs = {}, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+// Capa flotante: un <svg> chico, posicionado en coordenadas del escenario, que el navegador
+// compone en la GPU. Rotar/atenuar este elemento no obliga a redibujar el resto de la máquina.
+function floatSvg(container, x, y, w, h, cls) {
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
+  s.setAttribute('class', 'float' + (cls ? ' ' + cls : ''));
+  Object.assign(s.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+  container.appendChild(s);
+  return s;
+}
+// Halo de luz sin filtros (un degradé radial es mucho más barato que drop-shadow)
+function halo(cx, cy, r, color, parent, op = 0.55) {
+  return el('circle', { cx, cy, r, fill: `url(#halo-${color.replace('#', '')})`, opacity: op }, parent);
+}
+const haloColors = new Set();
+// Equivale a "filter: saturate(.88) brightness(.9)" pero horneado en los colores (sin costo por cuadro)
+const SAT = 0.88, BRI = 0.9;
+function toneRGB(r, g, b) {
+  const R = (0.213 + 0.787 * SAT) * r + (0.715 - 0.715 * SAT) * g + (0.072 - 0.072 * SAT) * b;
+  const G = (0.213 - 0.213 * SAT) * r + (0.715 + 0.285 * SAT) * g + (0.072 - 0.072 * SAT) * b;
+  const B = (0.213 - 0.213 * SAT) * r + (0.715 - 0.715 * SAT) * g + (0.072 + 0.928 * SAT) * b;
+  return [R, G, B].map((v) => Math.max(0, Math.min(255, Math.round(v * BRI))));
+}
+function tone(c) {
+  if (!c || c.startsWith('url') || c === 'none') return c;
+  let m = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (m) {
+    let h = m[1]; if (h.length === 3) h = h.split('').map((x) => x + x).join('');
+    const [r, g, b] = toneRGB(parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16));
+    return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  m = c.match(/^rgba?\(([^)]+)\)$/);
+  if (m) {
+    const p = m[1].split(',').map((x) => x.trim());
+    const [r, g, b] = toneRGB(+p[0], +p[1], +p[2]);
+    return p.length > 3 ? `rgba(${r},${g},${b},${p[3]})` : `rgb(${r},${g},${b})`;
+  }
+  return c;
+}
+function bakeTone(root) {
+  root.querySelectorAll('[fill],[stroke],[stop-color]').forEach((e) => {
+    for (const a of ['fill', 'stroke', 'stop-color']) { const v = e.getAttribute(a); if (v) e.setAttribute(a, tone(v)); }
+  });
+}
 const pt = (cx, cy, r, a) => `${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`;
 
 // ---------- Engranajes que engranan de verdad ----------
@@ -103,11 +147,12 @@ function screw(cx, cy, r, parent, rot = Math.random() * 180) {
   el('line', { x1: cx - r * 0.75, y1: cy, x2: cx + r * 0.75, y2: cy, stroke: '#0c1a3a', 'stroke-width': r * 0.32, transform: `rotate(${rot} ${cx} ${cy})` }, parent);
 }
 
-function drawGear(g, parent) {
-  const grp = el('g', { class: 'gear-rot' }, parent);
-  grp.style.transformBox = 'view-box';
-  grp.style.transformOrigin = `${g.cx}px ${g.cy}px`;
-  gearAnims.push(grp.animate([{ transform: 'rotate(0deg)' }, { transform: `rotate(${360 * g.dir}deg)` }], { duration: g.dur * 1000, iterations: Infinity }));
+function drawGear(g, layer, opacity) {
+  const R = Math.ceil(g.r + g.h + 4);
+  const fs = floatSvg(layer, g.cx - R, g.cy - R, R * 2, R * 2, 'gear-rot');
+  if (opacity) fs.style.opacity = opacity;
+  gearAnims.push(fs.animate([{ transform: 'rotate(0deg)' }, { transform: `rotate(${360 * g.dir}deg)` }], { duration: g.dur * 1000, iterations: Infinity }));
+  const grp = el('g', {}, fs);
   const fill = { gold: 'url(#gGold)', steel: 'url(#gSteel)', rose: 'url(#gRose)', emerald: 'url(#gEmerald)' }[g.mat];
   const edge = { gold: '#3a2a08', steel: '#1d2633', rose: '#3d1a14', emerald: '#06281a' }[g.mat];
   if (g.style === 'barrel') {
@@ -191,15 +236,16 @@ function cable(d, parent, flow = '#ffd27a', width = 14) {
   el('path', { d, fill: 'none', stroke: '#05090f', 'stroke-width': width + 4, 'stroke-linecap': 'round' }, parent);
   el('path', { d, fill: 'none', stroke: '#1b2433', 'stroke-width': width, 'stroke-linecap': 'round' }, parent);
   el('path', { d, fill: 'none', stroke: 'rgba(255,255,255,.08)', 'stroke-width': width * 0.25, 'stroke-linecap': 'round', transform: 'translate(-2,-3)' }, parent);
+  el('path', { d, fill: 'none', stroke: flow, 'stroke-width': width * 0.75, 'stroke-linecap': 'round', opacity: 0.12 }, parent);
   const f = el('path', { d, fill: 'none', stroke: flow, 'stroke-width': width * 0.28, 'stroke-linecap': 'round', class: 'cable-flow' }, parent);
-  f.style.filter = `drop-shadow(0 0 4px ${flow})`;
   f.style.animationDuration = (1 + Math.random() * 0.6).toFixed(2) + 's';
 }
 function plug(x, y, rot, parent) {
   const g = el('g', { transform: `translate(${x} ${y}) rotate(${rot})` }, parent);
   el('rect', { x: -24, y: -17, width: 36, height: 34, rx: 6, fill: PAL.rhodium, stroke: LINE, 'stroke-width': 2 }, g);
   el('rect', { x: 12, y: -10, width: 14, height: 20, rx: 3, fill: 'url(#gGold)', stroke: LINE, 'stroke-width': 1.5 }, g);
-  el('circle', { cx: -6, cy: 0, r: 4, fill: '#5dffa0' }, g).style.filter = 'drop-shadow(0 0 5px #5dffa0)';
+  halo(-6, 0, 11, '#5dffa0', g, 0.7);
+  el('circle', { cx: -6, cy: 0, r: 4, fill: '#5dffa0' }, g);
 }
 function pipe(d, parent, w = 28) {
   el('path', { d, fill: 'none', stroke: '#05090f', 'stroke-width': w + 4, 'stroke-linejoin': 'round' }, parent);
@@ -320,7 +366,18 @@ function conveyor(svg) {
 }
 
 export function buildMachine(svg, frontSvg) {
-  machineCtl.svg = svg;
+  // Capas: base estática (platina, caños) · engranajes en GPU · detalles · adornos al frente
+  const rig = document.createElement('div');
+  rig.id = 'machineRig';
+  svg.parentNode.insertBefore(rig, svg);
+  const base = document.createElementNS(NS, 'svg');
+  base.id = 'machineBase'; base.setAttribute('viewBox', '0 0 1920 1080'); base.setAttribute('aria-hidden', 'true');
+  const gearLayer = document.createElement('div'); gearLayer.id = 'gearLayer'; gearLayer.className = 'mlayer';
+  const frontLayer = document.createElement('div'); frontLayer.id = 'machineFront'; frontLayer.className = 'mlayer';
+  rig.append(base, gearLayer, svg, frontLayer);
+  machineCtl.svg = rig;
+  const top = svg;
+  svg = base;
   const defs = el('defs', {}, svg);
   defs.innerHTML = `
     <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${PAL.goldHi}"/><stop offset=".45" stop-color="${PAL.gold}"/><stop offset="1" stop-color="${PAL.goldLo}"/></linearGradient>
@@ -352,7 +409,8 @@ export function buildMachine(svg, frontSvg) {
   const lamps = el('g', {}, svg);
   [[300, 230], [1620, 230]].forEach(([x, y]) => {
     el('line', { x1: x, y1: 74, x2: x, y2: y - 30, stroke: '#05090f', 'stroke-width': 4 }, lamps);
-    el('path', { d: `M${x - 220} ${y + 560} L${x - 46} ${y} L${x + 46} ${y} L${x + 220} ${y + 560} Z`, fill: 'url(#lampGlow)', class: 'lamp-glow' }, lamps);
+    const gl = floatSvg(gearLayer, x - 220, y, 440, 560, 'lamp-glow');
+    el('path', { d: `M${x - 220} ${y + 560} L${x - 46} ${y} L${x + 46} ${y} L${x + 220} ${y + 560} Z`, fill: 'url(#lampGlow)' }, gl);
     el('path', { d: `M${x - 52} ${y} Q${x} ${y - 58} ${x + 52} ${y} Z`, fill: '#1b2433', stroke: LINE, 'stroke-width': 2 }, lamps);
     el('path', { d: `M${x - 52} ${y} L${x + 52} ${y}`, stroke: 'url(#gGold)', 'stroke-width': 4 }, lamps);
     el('ellipse', { cx: x, cy: y + 2, rx: 22, ry: 8, fill: '#fff4d9' }, lamps).style.filter = 'drop-shadow(0 0 12px #ffe2a8)';
@@ -372,6 +430,7 @@ export function buildMachine(svg, frontSvg) {
   steamPuffs(1100, 856, pipes, 2);
 
   // ---------- El calibre ----------
+  svg = top;
   const gearsG = el('g', { id: 'gearsG' }, svg);
   const trains = {
     left: gearTrain({ x: 470, y: 600, r: 120, t: 48 }, [
@@ -389,11 +448,10 @@ export function buildMachine(svg, frontSvg) {
     pr: gearTrain({ x: 1400, y: 718, r: 40, t: 20 }, [{ t: 20, mat: 'gold' }, { t: 16, ang: 155, mat: 'steel' }], 7),
   };
   // los trenes del piso quedan en penumbra para no competir con los personajes
-  const lowG = el('g', { class: 'low-gears' }, gearsG);
-  Object.entries(trains).forEach(([k, list]) => list.forEach((g) => drawGear(g, ['bl', 'br', 'pl', 'pr'].includes(k) ? lowG : gearsG)));
+  Object.entries(trains).forEach(([k, list]) => list.forEach((g) => drawGear(g, gearLayer, ['bl', 'br', 'pl', 'pr'].includes(k) ? 0.45 : 0)));
   // Trinquete sobre el barrilete (rueda de carga)
   const B = trains.right[0];
-  drawGear({ cx: B.cx, cy: B.cy, r: 48, t: 30, h: 7, phase: 0, dir: 1, dur: 40, mat: 'steel' }, gearsG);
+  drawGear({ cx: B.cx, cy: B.cy, r: 48, t: 30, h: 7, phase: 0, dir: 1, dur: 40, mat: 'steel' }, gearLayer);
 
   // Volante + escape + áncora (izquierda arriba)
   const bal = el('g', {}, svg);
@@ -446,24 +504,37 @@ export function buildMachine(svg, frontSvg) {
   const cols = ['#ff5a5f', '#ffd166', '#46d38b', '#fff1d0'];
   for (let i = 0, x = 30; x < 1900; x += 56, i++) {
     const y = lightsY(x);
-    const g = el('g', { transform: `translate(${x} ${y})` }, lights);
-    el('rect', { x: -5, y: 0, width: 10, height: 9, fill: 'url(#gGold)' }, g);
-    const b = el('ellipse', { cx: 0, cy: 20, rx: 8, ry: 12, fill: cols[i % cols.length], class: 'xmas-bulb' }, g);
-    b.style.filter = `drop-shadow(0 0 7px ${cols[i % cols.length]})`;
+    const c = cols[i % cols.length];
+    el('rect', { x: x - 5, y, width: 10, height: 9, fill: 'url(#gGold)' }, lights);
+    const b = floatSvg(frontLayer, x - 22, y - 2, 44, 46, 'xmas-bulb');
+    haloColors.add(c);
+    halo(x, y + 20, 21, c, b, 0.6);
+    el('ellipse', { cx: x, cy: y + 20, rx: 8, ry: 12, fill: c }, b);
     b.style.animationDelay = (-(i % 4) * 0.4 - Math.random() * 0.2).toFixed(2) + 's';
   }
 
   // Arbolito de engranajes esmeralda con adornos de oro y rubí
   const tree = el('g', {}, svg);
   [[1830, 985, 72, 32], [1830, 880, 58, 26], [1830, 795, 44, 22], [1830, 728, 32, 18], [1830, 680, 22, 14]]
-    .forEach(([x, y, r, t], i) => drawGear({ cx: x, cy: y, r, t, h: r * 0.16, phase: 0, dir: i % 2 ? -1 : 1, dur: 6 + i * 1.5, mat: 'emerald' }, tree));
+    .forEach(([x, y, r, t], i) => drawGear({ cx: x, cy: y, r, t, h: r * 0.16, phase: 0, dir: i % 2 ? -1 : 1, dur: 6 + i * 1.5, mat: 'emerald' }, frontLayer));
   [['#ffd166', 1790, 960], ['#ff5a5f', 1872, 900], ['#fff1d0', 1800, 820], ['#ffd166', 1862, 760], ['#ff5a5f', 1812, 720]]
-    .forEach(([c, x, y]) => { const o = el('circle', { cx: x, cy: y, r: 9, fill: c, stroke: '#3a2a08', 'stroke-width': 1.5, class: 'xmas-bulb' }, tree); o.style.animationDelay = (-Math.random() * 2).toFixed(2) + 's'; o.style.filter = `drop-shadow(0 0 6px ${c})`; });
-  const star = el('g', { class: 'star-tip', id: 'treeStar' }, tree);
-  star.style.transition = 'opacity .6s';
+    .forEach(([c, x, y]) => {
+      const o = floatSvg(frontLayer, x - 20, y - 20, 40, 40, 'xmas-bulb');
+      haloColors.add(c); halo(x, y, 19, c, o, 0.6);
+      el('circle', { cx: x, cy: y, r: 9, fill: c, stroke: '#3a2a08', 'stroke-width': 1.5 }, o);
+      o.style.animationDelay = (-Math.random() * 2).toFixed(2) + 's';
+    });
+  haloColors.add('#ffd166');
+  const starGlow = floatSvg(frontLayer, 1830 - 46, 636 - 46, 92, 92);
+  halo(1830, 636, 46, '#ffd166', starGlow, 0.5);
+  const star = floatSvg(frontLayer, 1830 - 34, 636 - 34, 68, 68, 'star-tip');
+  star.id = 'treeStar';
+  // el brillo acompaña a la estrella si el ratón se la roba
+  new MutationObserver(() => { starGlow.style.opacity = star.style.opacity; }).observe(star, { attributes: true, attributeFilter: ['style'] });
+  star.style.transition = starGlow.style.transition = 'opacity .6s';
   const sp = [];
   for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? 13 : 30; sp.push(`${1830 + Math.cos(a) * rr},${636 + Math.sin(a) * rr}`); }
-  el('polygon', { points: sp.join(' '), fill: 'url(#gGold)', stroke: '#3a2a08', 'stroke-width': 2 }, star).style.filter = 'drop-shadow(0 0 12px #ffd166)';
+  el('polygon', { points: sp.join(' '), fill: 'url(#gGold)', stroke: '#3a2a08', 'stroke-width': 2 }, star);
   el('rect', { x: 1808, y: 1050, width: 44, height: 20, rx: 3, fill: PAL.rhodium, stroke: LINE, 'stroke-width': 2 }, tree);
 
   // Máquina del bulón M24 (el pinscher pelea con él)
@@ -478,6 +549,10 @@ export function buildMachine(svg, frontSvg) {
   const bp = []; for (let i = 0; i < 6; i++) { const a = (Math.PI / 3) * i; bp.push(pt(1412, 970, 22, a).replace(' ', ',')); }
   el('polygon', { points: bp.join(' '), fill: 'url(#gSteel)', stroke: '#1d2633', 'stroke-width': 2 }, bolt);
   el('circle', { cx: 1412, cy: 970, r: 8.8, fill: PAL.rhodium, stroke: '#1d2633', 'stroke-width': 1.5 }, bolt);
+
+  haloColors.add('#5dffa0');
+  defs.insertAdjacentHTML('beforeend', [...haloColors].map((c) => `<radialGradient id="halo-${c.replace('#', '')}"><stop offset="0" stop-color="${c}" stop-opacity=".9"/><stop offset=".35" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join(''));
+  bakeTone(rig);
 
   // ---------- Elementos al frente ----------
   const f = frontSvg;

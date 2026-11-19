@@ -6,7 +6,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 const canvas = document.getElementById('bg3d');
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', stencil: false });
 } catch (e) {
   console.warn('WebGL no disponible, se usa fondo plano', e);
 }
@@ -14,9 +14,15 @@ try {
 if (renderer) init();
 
 function init() {
-  const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
-  renderer.setPixelRatio(DPR);
-  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  // Fondo desenfocado por la niebla: se renderiza a menor resolución y el navegador lo escala.
+  // Calidad: alta = ~1280 px de ancho a 30 fps; baja = ~800 px a 24 fps (TV y equipos modestos).
+  const QUALITY = { high: { w: 1280, fps: 30 }, low: { w: 800, fps: 24 } };
+  let q = QUALITY[new URLSearchParams(location.search).has('lite') ? 'low' : 'high'];
+  const applySize = () => {
+    renderer.setPixelRatio(Math.min(1, q.w / window.innerWidth));
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+  };
+  applySize();
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -122,7 +128,7 @@ function init() {
   }
 
   // ---------- Nieve ----------
-  const SNOW = 1400;
+  const SNOW = 700;
   const snowGeo = new THREE.BufferGeometry();
   const pos = new Float32Array(SNOW * 3), spd = new Float32Array(SNOW), phase = new Float32Array(SNOW);
   for (let i = 0; i < SNOW; i++) {
@@ -159,7 +165,7 @@ function init() {
     my = (e.clientY / window.innerHeight - 0.5) * 2;
   });
   window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    applySize();
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
   });
@@ -170,17 +176,26 @@ function init() {
     celebrate(on = true) { celebrate = on; },
     setRate(to, ms = 1500) { rateTarget = to; rateStep = 1 / Math.max(ms / 1000, 0.05); },
     dim(on) { dimTarget = on ? 0.25 : 1; },
+    setQuality(level) { q = QUALITY[level] || q; applySize(); },
+    pause(on) { running = !on && !document.hidden; if (running) { clock.getDelta(); loop(); } canvas.style.visibility = on ? 'hidden' : ''; },
   };
   const baseKey = key.intensity, baseKey2 = key2.intensity;
 
   const clock = new THREE.Clock();
-  let running = true;
+  let running = true, last = 0, looping = false;
   document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running) { clock.getDelta(); loop(); } });
 
   function loop() {
-    if (!running) return;
-    requestAnimationFrame(loop);
-    const dt = Math.min(clock.getDelta(), 0.05);
+    if (looping || !running) return;
+    looping = true;
+    requestAnimationFrame(frame);
+  }
+  function frame(ts) {
+    if (!running) { looping = false; return; }
+    requestAnimationFrame(frame);
+    if (ts - last < 1000 / q.fps - 2) return; // tope de cuadros: el fondo no necesita 60 fps
+    last = ts;
+    const dt = Math.min(clock.getDelta(), 0.08);
     const t = clock.elapsedTime;
 
     rate += Math.sign(rateTarget - rate) * Math.min(Math.abs(rateTarget - rate), rateStep * dt);

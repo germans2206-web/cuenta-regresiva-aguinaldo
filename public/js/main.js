@@ -1552,3 +1552,27 @@ async function celebrate() {
     }
   }, 260);
 }
+
+/* ---------------- Fluidez automática (TV y equipos modestos) ----------------
+   Mide los cuadros por segundo reales. Si el equipo no llega, baja la carga del fondo 3D
+   y apaga adornos que casi no se notan; personajes, reloj y engranajes siguen igual.
+   ?hd fuerza calidad completa · ?lite fuerza el modo liviano */
+(function perfGuard() {
+  if (params.has('hd')) return;
+  const lite = () => { document.body.classList.add('lite'); window.scene3d?.setQuality?.('low'); };
+  const liter = () => { document.body.classList.add('lite2'); window.scene3d?.pause?.(true); };
+  if (params.has('lite')) { lite(); return; }
+  const measure = (ms) => new Promise((res) => {
+    let n = 0; const t0 = performance.now();
+    const f = (t) => { n++; if (t - t0 < ms) requestAnimationFrame(f); else res((n * 1000) / (t - t0)); };
+    requestAnimationFrame(f);
+  });
+  setTimeout(async () => {
+    const a = await measure(5000);
+    if (a >= 45) return;
+    lite();
+    await sleep(3000);
+    const b = await measure(5000);
+    if (b < 30) liter();
+  }, 5000);
+})();
