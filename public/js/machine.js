@@ -39,6 +39,9 @@ function halo(cx, cy, r, color, parent, op = 0.55) {
   return el('circle', { cx, cy, r, fill: `url(#halo-${color.replace('#', '')})`, opacity: op }, parent);
 }
 const haloColors = new Set();
+// Capa de piezas animadas por encima de la maquinaria estática (se asigna en buildMachine)
+let FRONT = null;
+const floatBox = (cx, cy, hw, hh, cls) => floatSvg(FRONT, cx - hw, cy - hh, hw * 2, hh * 2, cls);
 // Equivale a "filter: saturate(.88) brightness(.9)" pero horneado en los colores (sin costo por cuadro)
 const SAT = 0.88, BRI = 0.9;
 function toneRGB(r, g, b) {
@@ -186,15 +189,12 @@ function bridge(points, w, parent) {
 }
 
 // Volante con espiral: el "corazón" del reloj
-function balanceWheel(cx, cy, r, parent) {
-  const g = el('g', {}, parent);
-  const spiral = el('g', { class: 'hairspring' }, g);
-  spiral.style.transformOrigin = `${cx}px ${cy}px`;
+function balanceWheel(cx, cy, r) {
+  const spiral = floatBox(cx, cy, r, r, 'hairspring');
   let sp = '';
   for (let a = 0; a < Math.PI * 16; a += 0.15) { const rr = r * 0.12 + (r * 0.55 * a) / (Math.PI * 16); sp += (a ? 'L' : 'M') + pt(cx, cy, rr, a); }
   el('path', { d: sp, fill: 'none', stroke: '#7fa6ff', 'stroke-width': 1.3, opacity: 0.9 }, spiral);
-  const wheel = el('g', { class: 'balance' }, g);
-  wheel.style.transformOrigin = `${cx}px ${cy}px`;
+  const wheel = floatBox(cx, cy, r + 16, r + 16, 'balance');
   el('circle', { cx, cy, r, fill: 'none', stroke: '#3a2a08', 'stroke-width': 13 }, wheel);
   el('circle', { cx, cy, r, fill: 'none', stroke: 'url(#gGold)', 'stroke-width': 10 }, wheel);
   for (let k = 0; k < 3; k++) {
@@ -202,13 +202,11 @@ function balanceWheel(cx, cy, r, parent) {
     el('line', { x1: cx, y1: cy, x2: cx + Math.cos(a) * r, y2: cy + Math.sin(a) * r, stroke: 'url(#gGold)', 'stroke-width': 6, 'stroke-linecap': 'round' }, wheel);
   }
   for (let k = 0; k < 12; k++) { const a = (k * Math.PI) / 6 + 0.26; el('circle', { cx: cx + Math.cos(a) * (r + 8), cy: cy + Math.sin(a) * (r + 8), r: 4, fill: 'url(#gGold)', stroke: '#3a2a08', 'stroke-width': 1 }, wheel); }
-  jewel(cx, cy, 6, g);
 }
 
 // Rueda de escape: avanza un diente por segundo, como el reloj
-function escapeWheel(cx, cy, r, parent) {
-  const grp = el('g', { class: 'escape' }, parent);
-  grp.style.transformOrigin = `${cx}px ${cy}px`;
+function escapeWheel(cx, cy, r) {
+  const grp = floatBox(cx, cy, r + 4, r + 4, 'escape');
   let d = '';
   const n = 15;
   for (let i = 0; i < n; i++) {
@@ -218,12 +216,11 @@ function escapeWheel(cx, cy, r, parent) {
   d += 'Z';
   el('path', { d, fill: 'url(#gSteel)', stroke: '#1d2633', 'stroke-width': 1.2 }, grp);
   for (let k = 0; k < 4; k++) { const a = (k * Math.PI) / 2; el('line', { x1: cx, y1: cy, x2: cx + Math.cos(a) * r * 0.7, y2: cy + Math.sin(a) * r * 0.7, stroke: 'url(#gSteel)', 'stroke-width': 4 }, grp); }
-  jewel(cx, cy, 4, parent);
+  jewel(cx, cy, 4, grp);
 }
-function palletFork(x1, y1, x2, y2, parent) {
-  const g = el('g', { class: 'pallet' }, parent);
-  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-  g.style.transformOrigin = `${mx}px ${my}px`;
+function palletFork(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, half = Math.hypot(x2 - x1, y2 - y1) / 2 + 16;
+  const g = floatBox(mx, my, half, half, 'pallet');
   el('line', { x1, y1, x2, y2, stroke: 'url(#gSteel)', 'stroke-width': 5, 'stroke-linecap': 'round' }, g);
   const nx = -(y2 - y1) * 0.18, ny = (x2 - x1) * 0.18;
   el('path', { d: `M${x2 - nx} ${y2 - ny} L${x2} ${y2} L${x2 + nx} ${y2 + ny}`, fill: 'none', stroke: 'url(#gSteel)', 'stroke-width': 5, 'stroke-linecap': 'round' }, g);
@@ -265,15 +262,16 @@ function gauge(x, y, r, parent) {
   }
   el('path', { d: `M${x + Math.cos(Math.PI * 0.12) * r * 0.85} ${y - Math.sin(Math.PI * 0.12) * r * 0.85} A${r * 0.85} ${r * 0.85} 0 0 0 ${x + Math.cos(Math.PI * 0.32) * r * 0.85} ${y - Math.sin(Math.PI * 0.32) * r * 0.85}`, fill: 'none', stroke: PAL.ruby, 'stroke-width': 4 }, parent);
   const t = el('text', { x, y: y + r * 0.48, 'text-anchor': 'middle', 'font-family': 'Cinzel, serif', 'font-weight': 700, 'font-size': r * 0.24, fill: '#2a3548' }, parent); t.textContent = 'BAR';
-  const n = el('g', { class: 'needle' }, parent);
-  n.style.transformOrigin = `${x}px ${y}px`;
+  const n = floatBox(x, y, r, r, 'needle');
   n.style.animationDelay = (-Math.random() * 3).toFixed(2) + 's';
   el('path', { d: `M${x - 3} ${y} L${x} ${y - r * 0.82} L${x + 3} ${y} Z`, fill: PAL.blued }, n);
-  el('circle', { cx: x, cy: y, r: 5, fill: 'url(#gGold)', stroke: '#3a2a08', 'stroke-width': 1 }, parent);
+  el('circle', { cx: x, cy: y, r: 5, fill: 'url(#gGold)', stroke: '#3a2a08', 'stroke-width': 1 }, n);
 }
 function steamPuffs(x, y, parent, n = 3) {
   for (let i = 0; i < n; i++) {
-    const c = el('circle', { cx: x + (Math.random() * 20 - 10), cy: y, r: 16 + Math.random() * 10, fill: 'rgba(200,215,235,.5)', class: 'steam' }, parent);
+    const cx = x + (Math.random() * 20 - 10), r = 16 + Math.random() * 10;
+    const c = floatBox(cx, y, r, r, 'steam');
+    el('circle', { cx, cy: y, r, fill: 'rgba(200,215,235,.5)' }, c);
     c.style.animationDelay = (i * 1.05).toFixed(2) + 's';
   }
 }
@@ -313,22 +311,23 @@ function industrial(svg) {
   const ps = el('g', {}, g);
   el('rect', { x: 46, y: 392, width: 40, height: 150, rx: 6, fill: '#26303f', stroke: '#05090f', 'stroke-width': 2 }, ps);
   [410, 520].forEach((y) => el('rect', { x: 42, y, width: 48, height: 10, rx: 3, fill: 'url(#gGold)' }, ps));
-  const rod = el('g', { class: 'piston-rod' }, ps);
+  const rod = floatSvg(FRONT, 48, 288, 36, 118, 'piston-rod');
   el('rect', { x: 59, y: 300, width: 14, height: 104, fill: 'url(#gSteel)', stroke: '#1d2633', 'stroke-width': 1 }, rod);
   el('rect', { x: 50, y: 290, width: 32, height: 14, rx: 4, fill: 'url(#gGold)' }, rod);
   // Extractor de aire (derecha)
   const fx = 1846, fy = 530;
   el('circle', { cx: fx, cy: fy, r: 50, fill: '#151d2b', stroke: 'url(#gGold)', 'stroke-width': 4 }, g);
-  const blades = el('g', { class: 'fan-blades' }, g);
-  blades.style.transformOrigin = `${fx}px ${fy}px`;
+  const blades = floatBox(fx, fy, 46, 46, 'fan-blades');
   for (let k = 0; k < 5; k++) {
     const a = (k * 2 * Math.PI) / 5;
     el('path', { d: `M${fx} ${fy} Q${pt(fx, fy, 40, a - 0.5)} ${pt(fx, fy, 44, a)} Q${pt(fx, fy, 30, a + 0.4)} ${fx} ${fy}Z`, fill: 'url(#gSteel)', opacity: 0.85 }, blades);
   }
-  [16, 28, 40].forEach((r) => el('circle', { cx: fx, cy: fy, r, fill: 'none', stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, g));
-  el('line', { x1: fx - 46, y1: fy, x2: fx + 46, y2: fy, stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, g);
-  el('line', { x1: fx, y1: fy - 46, x2: fx, y2: fy + 46, stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, g);
-  jewel(fx, fy, 5, g);
+  // rejilla por delante de las aspas (capa fija)
+  const grill = floatBox(fx, fy, 50, 50);
+  [16, 28, 40].forEach((r) => el('circle', { cx: fx, cy: fy, r, fill: 'none', stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, grill));
+  el('line', { x1: fx - 46, y1: fy, x2: fx + 46, y2: fy, stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, grill);
+  el('line', { x1: fx, y1: fy - 46, x2: fx, y2: fy + 46, stroke: 'rgba(160,180,210,.35)', 'stroke-width': 1.5 }, grill);
+  jewel(fx, fy, 5, grill);
   // Carteles de seguridad
   const sign1 = el('g', { transform: 'translate(40 640)' }, g);
   el('path', { d: 'M30 0 L60 52 L0 52 Z', fill: SAFETY, stroke: '#0b1220', 'stroke-width': 3, 'stroke-linejoin': 'round' }, sign1);
@@ -349,16 +348,15 @@ function conveyor(svg) {
   belt.style.strokeDashoffset = 0;
   for (let k = 0; k < 24; k++) el('path', { d: `M${x1 + 20 + k * 30} ${y + 18} l12 0 l-8 8 l-12 0 z`, fill: SAFETY, opacity: 0.45 }, g);
   [x1 + 18, x2 - 18].forEach((x) => {
-    const d = el('g', { class: 'drum' }, g);
-    d.style.transformOrigin = `${x}px ${y}px`;
+    const d = floatBox(x, y, 18, 18, 'drum');
     el('circle', { cx: x, cy: y, r: 16, fill: 'url(#gGold)', stroke: '#3a2a08', 'stroke-width': 1.5 }, d);
     el('line', { x1: x - 12, y1: y, x2: x + 12, y2: y, stroke: '#3a2a08', 'stroke-width': 3 }, d);
   });
   // cajas: salen escalonadas y recorren la cinta
   for (let k = 0; k < 4; k++) {
-    const c = el('g', { class: 'crate' }, g);
-    c.style.animationDelay = (-k * 3.5).toFixed(1) + 's';
     const cx = x1 + 10, w = 44 + (k % 2) * 10, h = 30 + (k % 3) * 6;
+    const c = floatSvg(FRONT, cx - 2, y - 20 - h, w + 4, h + 4, 'crate');
+    c.style.animationDelay = (-k * 3.5).toFixed(1) + 's';
     el('rect', { x: cx, y: y - 18 - h, width: w, height: h, rx: 3, fill: '#8a6a3a', stroke: '#2a1d08', 'stroke-width': 2 }, c);
     el('path', { d: `M${cx} ${y - 18 - h} l${w} ${h} M${cx + w} ${y - 18 - h} l${-w} ${h}`, stroke: 'rgba(42,29,8,.45)', 'stroke-width': 2 }, c);
     el('rect', { x: cx + w / 2 - 9, y: y - 18 - h / 2 - 6, width: 18, height: 12, rx: 2, fill: PAL.ivory }, c);
@@ -376,6 +374,7 @@ export function buildMachine(svg, frontSvg) {
   const frontLayer = document.createElement('div'); frontLayer.id = 'machineFront'; frontLayer.className = 'mlayer';
   rig.append(base, gearLayer, svg, frontLayer);
   machineCtl.svg = rig;
+  FRONT = frontLayer;
   const top = svg;
   svg = base;
   const defs = el('defs', {}, svg);
@@ -454,11 +453,10 @@ export function buildMachine(svg, frontSvg) {
   drawGear({ cx: B.cx, cy: B.cy, r: 48, t: 30, h: 7, phase: 0, dir: 1, dur: 40, mat: 'steel' }, gearLayer);
 
   // Volante + escape + áncora (izquierda arriba)
-  const bal = el('g', {}, svg);
-  balanceWheel(300, 360, 88, bal);
-  escapeWheel(430, 206, 40, bal);
-  palletFork(330, 300, 404, 232, bal);
-  bridge([[300, 360], [190, 300], [120, 300]], 30, bal);
+  balanceWheel(300, 360, 88);
+  escapeWheel(430, 206, 40);
+  palletFork(330, 300, 404, 232);
+  bridge([[300, 360], [190, 300], [120, 300]], 30, floatSvg(frontLayer, 90, 270, 240, 120));
 
   // Puentes de rodio sobre los trenes de ruedas
   const br = el('g', {}, svg);
@@ -502,15 +500,19 @@ export function buildMachine(svg, frontSvg) {
   const Lc = LIGHTS;
   el('path', { d: `M${Lc.x0} ${Lc.y0} Q${Lc.cx} ${Lc.cy} ${Lc.x1} ${Lc.y1}`, fill: 'none', stroke: '#0d2418', 'stroke-width': 5 }, lights);
   const cols = ['#ff5a5f', '#ffd166', '#46d38b', '#fff1d0'];
+  // 4 tiras de focos (una por color/ritmo): 4 capas en vez de 34
+  const strips = [0, 1, 2, 3].map((k) => {
+    const st = floatSvg(frontLayer, 0, 100, 1920, 140, 'xmas-bulb');
+    st.style.animationDelay = (-k * 0.4).toFixed(2) + 's';
+    return st;
+  });
   for (let i = 0, x = 30; x < 1900; x += 56, i++) {
     const y = lightsY(x);
     const c = cols[i % cols.length];
     el('rect', { x: x - 5, y, width: 10, height: 9, fill: 'url(#gGold)' }, lights);
-    const b = floatSvg(frontLayer, x - 22, y - 2, 44, 46, 'xmas-bulb');
     haloColors.add(c);
-    halo(x, y + 20, 21, c, b, 0.6);
-    el('ellipse', { cx: x, cy: y + 20, rx: 8, ry: 12, fill: c }, b);
-    b.style.animationDelay = (-(i % 4) * 0.4 - Math.random() * 0.2).toFixed(2) + 's';
+    halo(x, y + 20, 21, c, strips[i % 4], 0.6);
+    el('ellipse', { cx: x, cy: y + 20, rx: 8, ry: 12, fill: c }, strips[i % 4]);
   }
 
   // Arbolito de engranajes esmeralda con adornos de oro y rubí
@@ -538,8 +540,8 @@ export function buildMachine(svg, frontSvg) {
   el('rect', { x: 1808, y: 1050, width: 44, height: 20, rx: 3, fill: PAL.rhodium, stroke: LINE, 'stroke-width': 2 }, tree);
 
   // Máquina del bulón M24 (el pinscher pelea con él)
-  const blk = el('g', { id: 'm24block' }, svg);
-  blk.style.transformBox = 'view-box'; blk.style.transformOrigin = '1428px 1046px';
+  const blk = floatSvg(frontLayer, 1370, 904, 116, 142);
+  blk.id = 'm24block'; blk.style.transformOrigin = '50% 100%';
   el('rect', { x: 1376, y: 910, width: 104, height: 136, rx: 8, fill: 'url(#cotes)', stroke: '#05090f', 'stroke-width': 3 }, blk);
   el('rect', { x: 1376, y: 910, width: 104, height: 10, rx: 4, fill: 'url(#gGold)' }, blk);
   [[1390, 934], [1466, 934], [1390, 1032], [1466, 1032]].forEach(([x, y]) => screw(x, y, 5, blk));

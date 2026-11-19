@@ -9,6 +9,7 @@ try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', stencil: false });
 } catch (e) {
   console.warn('WebGL no disponible, se usa fondo plano', e);
+  document.documentElement.classList.add('no3d');
 }
 
 if (renderer) init();
@@ -17,7 +18,7 @@ function init() {
   // Fondo desenfocado por la niebla: se renderiza a menor resolución y el navegador lo escala.
   // Calidad: alta = ~1280 px de ancho a 30 fps; baja = ~800 px a 24 fps (TV y equipos modestos).
   const QUALITY = { high: { w: 1280, fps: 30 }, low: { w: 800, fps: 24 } };
-  let q = QUALITY[new URLSearchParams(location.search).has('lite') ? 'low' : 'high'];
+  let q = QUALITY[new URLSearchParams(location.search).has('lite') || /tizen|web0s|webos|smart-?tv|hbbtv|netcast|bravia|aft[a-z]|crkey|googletv|android tv/i.test(navigator.userAgent) ? 'low' : 'high'];
   const applySize = () => {
     renderer.setPixelRatio(Math.min(1, q.w / window.innerWidth));
     renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -37,6 +38,15 @@ function init() {
 
   const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.set(0, 0, 34);
+  // Viñeta pegada a la cámara: oscurece los bordes dentro del mismo lienzo
+  scene.add(camera);
+  const vig = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+    map: vignetteTexture(), transparent: true, depthTest: false, depthWrite: false, fog: false, toneMapped: false,
+  }));
+  vig.renderOrder = 999; vig.position.z = -1;
+  camera.add(vig);
+  const fitVig = () => { const h = 2 * Math.tan((camera.fov * Math.PI) / 360) * 1.02; vig.scale.set(h * camera.aspect, h, 1); };
+  fitVig();
 
   // ---------- Pared de chapas con remaches ----------
   const wallTex = makeWallTexture();
@@ -168,6 +178,7 @@ function init() {
     applySize();
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    fitVig();
   });
 
   let weldUntil = 0, celebrate = false, rate = 1, rateTarget = 1, rateStep = 1, dim = 1, dimTarget = 1;
@@ -177,13 +188,15 @@ function init() {
     setRate(to, ms = 1500) { rateTarget = to; rateStep = 1 / Math.max(ms / 1000, 0.05); },
     dim(on) { dimTarget = on ? 0.25 : 1; },
     setQuality(level) { q = QUALITY[level] || q; applySize(); },
-    pause(on) { running = !on && !document.hidden; if (running) { clock.getDelta(); loop(); } canvas.style.visibility = on ? 'hidden' : ''; },
+    // congela el fondo: el lienzo conserva el último cuadro (queda como imagen fija, costo casi nulo)
+    pause(on) { frozen = on; running = !on && !document.hidden; if (running) { clock.getDelta(); loop(); } },
   };
   const baseKey = key.intensity, baseKey2 = key2.intensity;
 
   const clock = new THREE.Clock();
   let running = true, last = 0, looping = false;
-  document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running) { clock.getDelta(); loop(); } });
+  let frozen = false;
+  document.addEventListener('visibilitychange', () => { running = !document.hidden && !frozen; if (running) { clock.getDelta(); loop(); } });
 
   function loop() {
     if (looping || !running) return;
@@ -287,4 +300,18 @@ function makeWallTexture() {
     g.fillStyle = r; g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill();
   }
   return new THREE.CanvasTexture(c);
+}
+
+function vignetteTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const r = Math.hypot(0.5, 0.55) * 256;
+  const grd = g.createRadialGradient(128, 115, 0, 128, 115, r);
+  grd.addColorStop(0.5, 'rgba(3,7,15,0)');
+  grd.addColorStop(1, 'rgba(3,7,15,.75)');
+  g.fillStyle = grd; g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }

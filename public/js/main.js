@@ -104,9 +104,13 @@ function tick() {
   }
   // la fiesta se dispara apenas el tiempo llega a cero (aunque queden milisegundos del último segundo)
   if (ms === 0 && !finished) { finished = true; setTimeout(celebrate, 50); }
-  document.querySelectorAll('.sep').forEach((s) => s.classList.toggle('off', clockState.stopped || ((ms % 1000) < 500 && ms > 0)));
-  requestAnimationFrame(tick);
+  const off = clockState.stopped || ((ms % 1000) < 500 && ms > 0);
+  if (off !== sepOff) { sepOff = off; seps.forEach((s) => s.classList.toggle('off', off)); }
+  // el reloj sólo necesita despertarse en cada medio segundo (no en cada cuadro)
+  setTimeout(tick, ms > 0 ? (ms % 500) + 4 : 250);
 }
+let sepOff = null;
+const seps = document.querySelectorAll('.sep');
 tick();
 
 const fill = (t) => t.replace('{d}', remain.d).replace('{h}', remain.h).replace('{m}', remain.m);
@@ -226,6 +230,7 @@ class Actor {
     if (this.action) this.el.classList.remove('act-' + this.action.id);
     this.action = a;
     if (a) this.el.classList.add('act-' + a.id);
+    if (this.def.id === 'pinscher') document.body.dataset.pin = a ? a.id : '';
     if (a?.fx === 'weld') window.scene3d?.weld(a.dur * 1000);
     return a;
   }
@@ -402,6 +407,43 @@ class Actor {
 const actors = CHARACTERS.map((c) => new Actor(c));
 const A = Object.fromEntries(actors.map((a) => [a.def.id, a]));
 window.__actors = actors;
+
+/* Los textos dentro de los personajes se pasan a imágenes nítidas (4×) al cargar.
+   Un <text> SVG se vuelve a medir en cada cuadro cuando el personaje se anima; una imagen no. */
+async function rasterizeCharTexts() {
+  try {
+    await Promise.all(['700 10px "Chakra Petch"', '800 10px "Baloo 2"', '700 10px Cinzel'].map((f) => document.fonts.load(f)));
+  } catch (e) { /* si falla, se usa la fuente que haya */ }
+  const K = 4, NSv = 'http://www.w3.org/2000/svg';
+  const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d');
+  for (const t of document.querySelectorAll('.char svg text')) {
+    const txt = t.textContent; if (!txt.trim()) continue;
+    const size = parseFloat(t.getAttribute('font-size')) || 16;
+    const fam = t.getAttribute('font-family') || 'sans-serif', w8 = t.getAttribute('font-weight') || '400';
+    const fill = t.getAttribute('fill') || '#000', stroke = t.getAttribute('stroke'), sw = parseFloat(t.getAttribute('stroke-width')) || 0;
+    const font = `${w8} ${size * K}px ${/[,"']/.test(fam) ? fam : `"${fam}"`}`;
+    ctx.font = font;
+    const m = ctx.measureText(txt);
+    const asc = Math.max(m.actualBoundingBoxAscent || size * K * 0.8, size * K * 0.75), desc = Math.max(m.actualBoundingBoxDescent || 0, size * K * 0.25);
+    const pad = Math.ceil(sw * K) + 2 * K;
+    const W = Math.ceil(m.width + pad * 2), H = Math.ceil(asc + desc + pad * 2);
+    cvs.width = W; cvs.height = H;
+    ctx.font = font; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    if (stroke && sw) { ctx.lineJoin = 'round'; ctx.lineWidth = sw * K; ctx.strokeStyle = stroke; ctx.strokeText(txt, pad, pad + asc); }
+    ctx.fillStyle = fill; ctx.fillText(txt, pad, pad + asc);
+    const x = parseFloat(t.getAttribute('x')) || 0, y = parseFloat(t.getAttribute('y')) || 0;
+    const anchor = t.getAttribute('text-anchor');
+    const left = x - (anchor === 'middle' ? m.width / 2 / K : anchor === 'end' ? m.width / K : 0) - pad / K;
+    const img = document.createElementNS(NSv, 'image');
+    img.setAttribute('x', left.toFixed(2)); img.setAttribute('y', (y - (asc + pad) / K).toFixed(2));
+    img.setAttribute('width', (W / K).toFixed(2)); img.setAttribute('height', (H / K).toFixed(2));
+    img.setAttribute('preserveAspectRatio', 'none');
+    img.setAttribute('href', cvs.toDataURL('image/png'));
+    for (const at of ['class', 'style', 'opacity', 'transform']) if (t.hasAttribute(at)) img.setAttribute(at, t.getAttribute(at));
+    t.replaceWith(img);
+  }
+}
+rasterizeCharTexts();
 
 /* ---------------- El ratón ladrón: roba repuestos de lugares ---------------- */
 async function mouseHeist(m) {
@@ -1561,7 +1603,9 @@ async function celebrate() {
   if (params.has('hd')) return;
   const lite = () => { document.body.classList.add('lite'); window.scene3d?.setQuality?.('low'); };
   const liter = () => { document.body.classList.add('lite2'); window.scene3d?.pause?.(true); };
+  const isTV = /tizen|web0s|webos|smart-?tv|hbbtv|netcast|bravia|aft[a-z]|crkey|googletv|android tv/i.test(navigator.userAgent);
   if (params.has('lite')) { lite(); return; }
+  if (isTV) lite();
   const measure = (ms) => new Promise((res) => {
     let n = 0; const t0 = performance.now();
     const f = (t) => { n++; if (t - t0 < ms) requestAnimationFrame(f); else res((n * 1000) / (t - t0)); };
@@ -1569,10 +1613,10 @@ async function celebrate() {
   });
   setTimeout(async () => {
     const a = await measure(5000);
-    if (a >= 45) return;
+    if (a >= 50) return;
     lite();
     await sleep(3000);
     const b = await measure(5000);
-    if (b < 30) liter();
+    if (b < 42) liter();
   }, 5000);
 })();
