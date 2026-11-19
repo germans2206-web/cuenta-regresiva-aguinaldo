@@ -1,5 +1,5 @@
 import { buildMachine, lightsY, machineCtl } from './machine.js';
-import { CHARACTERS } from './characters.js';
+import { CHARACTERS, SAGE, SAGE_FOR } from './characters.js';
 
 /* ------------------------------------------------------------------
    Configuración
@@ -378,6 +378,7 @@ class Actor {
         await this.travelTo(pick(others));
       }
       if (this.def.id === 'mouse' && Math.random() < (this.def.tripChance || 0)) { await mouseHeist(this); continue; }
+      if (this.def.id === 'bird' && Math.random() < 0.55 && (await sageVisit(this))) continue;
       if (this.def.id === 'pinscher' && Math.random() < (this.def.tripChance || 0)) { await zoomies(this); continue; }
       const a = this.act(this.nextAction().id);
       if (a.say && Math.random() < 0.7) setTimeout(() => this.say(pick(a.say), Math.min(3400, a.dur * 1000 - 400)), 350);
@@ -418,6 +419,28 @@ async function mouseHeist(m) {
   await sleep(500);
 }
 
+/* ---------------- Don Anó, el sabio: vuela hasta un compañero y le da un consejo ---------------- */
+async function sageVisit(b) {
+  const others = actors.filter((a) => a !== b && a.busy && a.el.classList.contains('on') && !(a.def.id === 'mouse' && a.layer === 'back'));
+  if (!others.length) return false;
+  const t = pick(others);
+  const side = t.x > 1500 ? -1 : t.x < 400 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+  const headY = t.top + t.pos.y + t.h * 0.25;
+  const x = Math.max(120, Math.min(1800, t.x + side * (t.w * 0.45 + 70)));
+  const y = Math.max(200, Math.min(980, headY));
+  await b.moveTo(x, y, { mode: 'fly', arc: 80 });
+  b.spot = { x, y, level: 'air' };
+  b.el.classList.toggle('face-left', t.x < b.x);
+  b.act('advise');
+  b.say(SAGE_FOR[t.def.id] || pick(SAGE), 4600, true);
+  await sleep(4800);
+  b.act(null);
+  b.el.classList.remove('face-left');
+  await sleep(300);
+  await b.travelTo(pick(b.spots));
+  return true;
+}
+
 /* ---------------- El pinscher con "zoomies": corre como loco por todo el piso ---------------- */
 async function zoomies(p) {
   p.act('bark');
@@ -440,19 +463,19 @@ const SCENES = [
       await P.enter(); P.act('struggle');
       B.setLayer('front'); B.show(); B.place(2150, 520);
       await B.moveTo(P.x + 138, 912, { mode: 'fly', dur: 1800, easing: 'ease-out' });
-      B.act('sing'); B.say('¿Todavía con ese bulón? 😏', 2600, true);
+      B.act('advise'); B.say('¿Todavía con ese bulón? «Mbeguekatu», che ra’a: despacito sale 🐦', 3000, true);
       await sleep(2600);
       B.act(null); P.act('bark'); P.say('¡GRRR! ¡Bajate de ahí, pájaro!', 2600, true);
       await sleep(2400);
-      P.act('snap'); B.say('¡Anó, anó! ¡No me alcanzás! 😜', 3200, true);
+      P.act('snap'); B.say('«Ijargélva opyta ha’eño»: el que se enoja por todo se queda solo 🐦', 3600, true);
       const cx = P.x + 20, cy = 900;
       for (const [dx, dy] of [[-110, 20], [0, -90], [110, 10], [0, 40], [-110, -20], [10, -100]]) await B.moveTo(cx + dx, cy + dy, { mode: 'fly', speed: 0.55 });
       P.act('dizzy'); P.say('Me mareé… 😵‍💫', 2600, true);
       await B.moveTo(P.x + 138, 912, { mode: 'fly', speed: 0.6 });
-      B.act('sing'); B.say('¡Jajajá! Anó anó 🐦', 2600, true);
+      B.act('read'); B.say('«Mbarakaja una vénte opo’ẽ tatápe»: el gato se quema una sola vez. Aprendé, perrito 📖', 3400, true);
       await sleep(2800);
       B.act(null); await B.exit();
-      P.act('bark'); P.say('¡Y NO VUELVAS! 😤', 2400, true);
+      P.act('bark'); P.say('¡Y NO VUELVAS, viejo sabelotodo! 😤', 2400, true);
       await sleep(2500); P.act(null); await sleep(400); await P.exit();
     },
   },
@@ -1347,7 +1370,7 @@ const BREAKDOWNS = [
         await come(A.monkey, 1700, FLOOR); A.monkey.act('switch'); A.monkey.say('¡Subo la térmica! ¡CLICK! 🐒', 2600, true); await sleep(1400);
       } else if (has('duck')) { A.duck.act('change'); A.duck.say('Fusible nuevo colocado ✅', 2600, true); await sleep(2600); }
       else await sleep(1500);
-      B.act('tie'); B.say('Cable reconectado y precintado… perdón 😅', 3000, true);
+      B.act('tie'); B.say('Cable reconectado y precintado. Hasta el más sabio se equivoca, mitãnguéra 😅', 3200, true);
       restartMachine();
       await sleep(2000); B.act(null);
       const cal = pickFirst(team, ['duck', 'parrot', 'octo', 'mouse']);
@@ -1469,7 +1492,7 @@ const director = {
     }
   },
 };
-window.__scenes = SCENES; window.__director = director;
+window.__scenes = SCENES; window.__sage = sageVisit; window.__director = director;
 if (params.has('parada')) {
   setTimeout(() => director.breakdown(parseInt(params.get('parada'), 10) || 0), 1200);
 } else if (params.has('escena')) {

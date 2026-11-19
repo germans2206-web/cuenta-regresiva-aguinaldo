@@ -143,6 +143,7 @@
 @keyframes snapjump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-80px) rotate(-12deg); } 60% { transform: translateY(-70px) rotate(8deg); } 85% { transform: translateY(0) scale(1.06,.9); } }
 @keyframes lever { 0%, 30% { transform: rotate(0); } 50%, 80% { transform: rotate(40deg); } 100% { transform: rotate(0); } }
 @keyframes sniffhead { 0%, 100% { transform: rotate(24deg) translate(6px,14px); } 50% { transform: rotate(30deg) translate(8px,16px); } }
+@keyframes nod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(10deg); } }
 @keyframes pbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 @media (prefers-reduced-motion: reduce) {
@@ -155,3 +156,5 @@
 @keyframes sensorled { 0%, 65% { fill: #ff3b2f; } 66%, 100% { fill: #5dffa0; } }
 @keyframes trip { 0%, 8% { transform: none; } 22% { transform: translateX(26px) rotate(22deg); } 34%, 66% { transform: translate(44px, 18px) rotate(72deg); } 82% { transform: translateX(10px) rotate(8deg); } 100% { transform: none; } }
 @keyframes paintwalk { from { transform: translateX(0); } to { transform: translateX(36px); } }
+
+.bubble { white-space: pre-line; }

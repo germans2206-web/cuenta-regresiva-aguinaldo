@@ -218,6 +218,26 @@ const bear = {
    PÁJARO NEGRO (ANÓ)
    ===================================================================== */
 const BK = '#1b1c24';
+// Ñe'ẽnga (refranes paraguayos) que usa Don Anó, el pájaro sabio del taller
+export const SAGE = [
+  '«Retĩ va’erã remonda haguã, ndaha’éi remba’apo haguã»: da vergüenza robar, no trabajar. ¡Fuerza, mitãnguéra! 💪',
+  '«Tanimbuguýpe opyta tata»: bajo la ceniza queda el fuego. ¡No aflojen, que el aguinaldo llega! 🔥',
+  '«Japu ha monda oñopariénte»: la mentira y el robo son parientes… ya lo vimos con cierto banco 😏',
+  '«Iñe’ẽngatuetéva ojavy heta»: el que mucho habla, mucho se equivoca. Menos charla y más preventivo 🐦',
+  '«Ñande rógape mante japytu’upa»: solo en casa se descansa bien. ¡Falta poco para las vacaciones! 🏡',
+  '«Jaha mbeguekatu»: vamos despacito, que el apuro no adelanta el 15 🐢',
+];
+export const SAGE_FOR = {
+  pinscher: '«Ijargélva opyta ha’eño»: el que se enoja por todo se queda solo. Respirá, che ra’a 🐦',
+  duck: '«Japuka haguãnte», he’i mbarakaja oñepysãngárõ: «fue solo para reírnos», dice el gato que se tropezó… ¿no, pato? 🦆',
+  mouse: '«Japu ha monda oñopariénte»: mentir y robar son parientes. Devolvé ese perno, ratoncito 🐭',
+  monkey: '«Iñe’ẽngatuetéva ojavy heta»: el que mucho grita, mucho se equivoca. Menos «¡UH UH!» y más rodamiento 🐒',
+  bear: '«Retĩ va’erã remonda haguã, ndaha’éi remba’apo haguã»: da vergüenza robar, no trabajar. ¡Bien ahí, oso! 🐻',
+  pig: '«Ñande rógape mante japytu’upa»: en casa se descansa… pero hoy toca filtro, chanchito 🐷',
+  rabbit: '«Jaha mbeguekatu»: despacito, conejo, que el apuro no cobra antes el aguinaldo 🐰',
+  octo: '«Ouvaívape ouvaípa»: un problema se suma a otro… por eso tenés ocho brazos 🐙',
+  parrot: '«Iñe’ẽngatuetéva ojavy heta»: el que habla mucho se equivoca mucho, lorito 🦜',
+};
 const birdWingsOut = `<g ${S('92 118', 'osc .25s ease-in-out infinite alternate', '--a:-14deg;--b:10deg')}><path d="M96 118 Q60 70 14 82 Q46 100 40 116 Q66 112 84 132 Z" fill="#262838" ${ol()}/></g>
   <g ${S('112 118', 'osc .25s ease-in-out infinite alternate', '--a:14deg;--b:-10deg')}><path d="M108 116 Q150 66 196 74 Q166 96 172 112 Q142 112 120 132 Z" fill="#262838" ${ol()}/></g>`;
 const bird = {
@@ -259,12 +279,29 @@ const bird = {
     <path d="M168 76 Q186 72 196 90" fill="none" stroke="#55555f" stroke-width="3"/>
     <circle cx="146" cy="86" r="10" fill="#fff" ${ol(3)}/>
     <g class="d-eyes">${eye(148, 86, 4.5)}</g>
+    <path d="M132 70 q8 -8 22 -4" fill="none" stroke="#cfd6de" stroke-width="5" stroke-linecap="round"/>
+    <path d="M126 112 q6 8 14 4 M132 114 q4 10 12 6" fill="none" stroke="#cfd6de" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="146" cy="86" r="13" fill="rgba(200,230,255,.18)" stroke="#c9a24a" stroke-width="3"/>
+    <path d="M133 84 L116 80" stroke="#c9a24a" stroke-width="2.5"/>
+    <path d="M140 80 l6 -4" stroke="#fff" stroke-width="2" stroke-linecap="round" class="glint"/>
     <g class="A a-peck"><path d="M140 80 l12 12 M152 80 l-12 12" ${ol(3)}/></g>
     <g class="A a-sing a-balance"><path d="M138 70 l14 4" ${ol(3)}/></g>
   </g>
   <g class="A a-peck">
     <path d="M196 132 l-14 18 h10 l-8 18 l20 -24 h-10 l8 -12z" fill="#fff36b" ${ol(3)} style="animation:zapflash .6s steps(1) infinite"/>
     <path d="M60 110 l-12 -6 M64 100 l-8 -10 M140 150 l8 8 M120 160 l2 12" ${ol(3)} style="animation:zapflash .6s steps(1) infinite"/>
+  </g>
+  <g class="A a-advise">
+    <g ${S('92 118', 'osc .9s ease-in-out infinite alternate', '--a:-6deg;--b:6deg')}><path d="M86 120 Q70 84 66 48 Q80 60 84 52 Q90 70 104 122 Z" fill="#262838" ${ol()}/></g>
+    ${floatTxt(60, 40, '✦', 18, '#ffd166', 1.6, 0, -6, -30)}
+  </g>
+  <g class="A a-ponder">
+    <path d="M86 122 Q120 120 150 112 Q156 118 150 124 Q118 134 90 140 Z" fill="#262838" ${ol()}/>
+    ${floatTxt(180, 50, '…', 30, '#fff', 1.8, 0, 10, -30)}${floatTxt(196, 36, '?', 22, '#ffd166', 1.8, 0.9, 14, -30)}
+  </g>
+  <g class="A a-read">
+    <path d="M86 122 Q120 112 142 128 Q118 146 90 140 Z" fill="#262838" ${ol()}/>
+    <g transform="rotate(-12 150 138)"><rect x="124" y="122" width="54" height="36" rx="3" fill="#7a1f2b" ${ol(3)}/><path d="M151 122 v36" stroke="${O}" stroke-width="2"/><rect x="128" y="126" width="20" height="28" fill="#f4e9cf"/><rect x="154" y="126" width="20" height="28" fill="#f4e9cf"/><text x="151" y="118" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="9" fill="#ffd166">Ñe'ẽnga</text></g>
   </g>
   <g class="A a-sing">${floatTxt(200, 70, '♪', 30, '#ffd23f', 1.5, 0, 20, -60)}${floatTxt(206, 90, '♫', 28, '#ff7bd5', 1.5, 0.5, 30, -60)}${floatTxt(196, 80, '♪', 24, '#4fc3ff', 1.5, 1, 10, -70)}</g>
   <g class="A a-fly"><g ${S('100 60')}>${floatTxt(30, 160, '·', 30, '#fff', 0.6, 0, -10, 40)}</g></g>
@@ -285,15 +322,22 @@ const bird = {
 .c-bird.act-peck .root{animation:jit .1s infinite}
 .c-bird.act-sing .jaw{animation:osc .22s ease-in-out infinite alternate;--a:0deg;--b:24deg}
 .c-bird.act-sing .root{animation:bob .44s ease-in-out infinite;--y:-5px}
-.c-bird.act-balance .root{animation:osc .6s ease-in-out infinite alternate;--a:-13deg;--b:13deg}`,
+.c-bird.act-balance .root{animation:osc .6s ease-in-out infinite alternate;--a:-13deg;--b:13deg}
+.c-bird .glint{animation:flick 2.4s infinite}
+.c-bird.act-advise .head{animation:nod 1.1s ease-in-out infinite}
+.c-bird.act-ponder .head{transform:rotate(-10deg);transition:transform .4s}
+.c-bird.act-read .head{transform:rotate(16deg);transition:transform .4s}`,
   actions: [
-    { id: 'wiring', dur: 4.4, say: ['Control de cableado: L1 ✔ L2 ✔ L3 ✔ 🐦', 'Prueba de continuidad… ¡todo en orden, anó!'] },
-    { id: 'pull', dur: 4.5, say: ['¡Estirando cables! Este va directo al aguinaldo ⚡', 'Anó anó… ¡qué duro está este cable!'] },
-    { id: 'fly', dur: 4, say: ['¡Inspección aérea! Todo en orden por acá arriba', 'Desde acá se ve el 15 de diciembre…'] },
-    { id: 'tie', dur: 4.5, say: ['Cables ordenados = técnico feliz', 'Precinto por acá, precinto por allá'] },
-    { id: 'peck', dur: 3.5, hide: ['d-eyes'], say: ['¡Ay! Este sí tenía corriente 😵', '¡¿Quién no cortó la energía?!'] },
-    { id: 'sing', dur: 4, say: ['🎵 Navidad, aguinaldo, navidad… 🎵', '🎵 Faltan {d} díaaas 🎵'] },
-    { id: 'balance', dur: 4, hide: ['d-wing'], say: ['¡Ojo con la tensión de esta línea!', 'Equilibrio total, como mi presupuesto'] },
+    { id: 'wiring', dur: 4.4, say: ['Control de cableado: L1 ✔ L2 ✔ L3 ✔ 🐦', 'Prueba de continuidad… la constancia siempre da resultado'] },
+    { id: 'pull', dur: 4.5, say: ['«Mbeguekatu», che ra’a: despacito se tensa mejor el cable 🐦', 'Un cable bien tenso es un cable feliz'] },
+    { id: 'fly', dur: 4, say: ['Desde acá arriba veo todo… y todo se puede mejorar 🐦', 'El que mira de lejos ve el conjunto, mitãnguéra'] },
+    { id: 'tie', dur: 4.5, say: ['Cables ordenados, mente ordenada 🐦', 'La prolijidad también es sabiduría'] },
+    { id: 'peck', dur: 3.5, hide: ['d-eyes'], say: ['¡Ay! Hasta el más sabio se electrocuta alguna vez ⚡', '«Mbarakaja una vénte opo’ẽ tatápe»: el gato se quema una sola vez… yo ya voy dos 😵'] },
+    { id: 'sing', dur: 4, say: ['🎵 ¡Mba’éichapa, che irũnguéra! 🎵', '🎵 Faltan {d} días… paciencia, paciencia 🎵'] },
+    { id: 'advise', dur: 4.4, hide: ['d-wing'], say: SAGE },
+    { id: 'ponder', dur: 3.8, hide: ['d-wing'], say: ['Hmm… «Tanimbuguýpe opyta tata»: bajo la ceniza queda el fuego 🔥', 'Pensando… el que piensa antes de ajustar, ajusta una sola vez'] },
+    { id: 'read', dur: 4, hide: ['d-wing'], say: ['Leyendo mi libro de ñe’ẽnga… siempre hay uno para cada ocasión 📖', '«Ñe’ẽ ñemi ha japepo’i tatápe ndoguerúi mba’e porã»: el chisme y la olla chiquita al fuego no traen nada bueno'] },
+    { id: 'balance', dur: 4, hide: ['d-wing'], say: ['La vida es como este cable: equilibrio y paciencia 🐦', 'Ni muy tenso ni muy flojo: así se vive mejor'] },
   ],
 };
 

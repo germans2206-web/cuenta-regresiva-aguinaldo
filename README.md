@@ -14,7 +14,7 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
   | Personaje | Acciones |
   |---|---|
   | Oso soldador | suelda, se seca el sudor, martilla, toma tereré, baila, mira el reloj |
-  | Anó (pájaro negro) | estira cables, vuela, ordena cables, picotea un conector, canta, hace equilibrio |
+  | Don Anó (pájaro sabio) | aconseja con ñe’ẽnga en guaraní y castellano, piensa, lee su libro de refranes, controla cableado, vuela a aconsejar a cada compañero |
   | Pulpo | multitarea con 4 herramientas, gira válvula, tira tinta, checklist, malabares, saluda |
   | Conejo en bici | pedalea, genera energía, hace willy, toca timbre, pinchadura, se cansa |
   | Pato con casco | levanta la escalera, sube, cambia la lámpara, tambalea, mide tensión, festeja |
