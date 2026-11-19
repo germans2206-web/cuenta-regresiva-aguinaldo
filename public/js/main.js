@@ -1,5 +1,5 @@
 import { buildMachine, lightsY, machineCtl } from './machine.js';
-import { CHARACTERS, SAGE, SAGE_FOR } from './characters.js';
+import { CHARACTERS, SAGE, SAGE_FOR, AGUI_ASK, AGUI_PLANS } from './characters.js';
 
 /* ------------------------------------------------------------------
    Configuración
@@ -19,6 +19,8 @@ if (params.get('demo')) TARGET = new Date(Date.now() + (parseInt(params.get('dem
 const YEAR_START = new Date(`${TARGET.getFullYear()}-01-01T00:00:00${TZ}`);
 
 const $ = (s, r = document) => r.querySelector(s);
+// tiempo de lectura de los consejos de Don Anó (frases largas, español + guaraní)
+const readMs = (t) => Math.min(13000, 2200 + t.length * 85);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -121,6 +123,8 @@ const MESSAGES = [
   'FALTAN {d} DÍAS PARA EL 15 DE DICIEMBRE',
   'RECORDATORIO: EL AGUINALDO NO SE COBRA SOLO, SIGAN CON EL PREVENTIVO',
   'SE RUEGA NO GASTAR EL AGUINALDO ANTES DE COBRARLO',
+  'ENCUESTA DEL TALLER: ¿EN QUÉ VAS A GASTAR EL AGUINALDO? — 9 DE CADA 10 RESPONDIERON «HENDAPAITÉMA»',
+  'EL PULPO CONFIRMA QUE EL AGUINALDO LLEGA EL 15: «¡SEEEEEE!»',
   'EL PULPO SOLICITA 8 PARES DE GUANTES AL ALMACÉN',
   'EL PINSCHER SIGUE PELEANDO CON EL BULÓN M24',
   'SEGURIDAD PRIMERO: CASCO, LENTES Y BOTINES',
@@ -241,6 +245,11 @@ class Actor {
     const b = document.createElement('div');
     b.className = 'bubble';
     b.textContent = fill(text);
+    // un globo por personaje: el anterior se retira para que no se apilen
+    const prev = this.bubble;
+    if (prev && prev.isConnected && !prev.classList.contains('out')) { prev.classList.add('out'); clearTimeout(prev._t); setTimeout(() => { if (prev.isConnected) { prev.remove(); activeBubbles--; } }, 260); }
+    this.bubble = b;
+    if (this.def.id === 'bird') ms = Math.max(ms, readMs(b.textContent));   // Don Anó habla largo: más tiempo para leer
     bubblesLayer.appendChild(b);
     const bw = b.offsetWidth, bh = b.offsetHeight;
     const cx = this.x;
@@ -258,7 +267,7 @@ class Actor {
     }
     b.style.left = x + 'px'; b.style.top = y + 'px';
     b.style.setProperty('--tail', Math.max(26, Math.min(bw - 26, cx - x)) + 'px');
-    setTimeout(() => { b.classList.add('out'); setTimeout(() => { b.remove(); activeBubbles--; }, 260); }, ms);
+    b._t = setTimeout(() => { b.classList.add('out'); setTimeout(() => { if (b.isConnected) { b.remove(); activeBubbles--; } }, 260); }, ms);
   }
   // Mueve el punto de apoyo del personaje a (x, y) del escenario
   async moveTo(x, y, o = {}) {
@@ -385,9 +394,16 @@ class Actor {
       if (this.def.id === 'mouse' && Math.random() < (this.def.tripChance || 0)) { await mouseHeist(this); continue; }
       if (this.def.id === 'bird' && Math.random() < 0.55 && (await sageVisit(this))) continue;
       if (this.def.id === 'pinscher' && Math.random() < (this.def.tripChance || 0)) { await zoomies(this); continue; }
+      if (this.def.id !== 'bird' && Math.random() < 0.14 && (await aguiChat(this))) continue;
       const a = this.act(this.nextAction().id);
-      if (a.say && Math.random() < 0.7) setTimeout(() => this.say(pick(a.say), Math.min(3400, a.dur * 1000 - 400)), 350);
-      await sleep(a.dur * 1000);
+      let wait = a.dur * 1000;
+      if (a.say && Math.random() < 0.7) {
+        const line = pick(a.say);
+        // el pájaro se queda quieto hasta que se pueda leer su frase completa
+        if (this.def.id === 'bird') wait = Math.max(wait, readMs(fill(line)) + 500);
+        setTimeout(() => this.say(line, Math.min(3400, a.dur * 1000 - 400)), 350);
+      }
+      await sleep(wait);
       this.act(null);
       await sleep((this.def.gap || 0.6) * 1000);
     }
@@ -407,6 +423,7 @@ class Actor {
 const actors = CHARACTERS.map((c) => new Actor(c));
 const A = Object.fromEntries(actors.map((a) => [a.def.id, a]));
 window.__actors = actors;
+window.__aguiChat = (...a) => aguiChat(...a);
 
 /* Los textos dentro de los personajes se pasan a imágenes nítidas (4×) al cargar.
    Un <text> SVG se vuelve a medir en cada cuadro cuando el personaje se anima; una imagen no. */
@@ -474,12 +491,33 @@ async function sageVisit(b) {
   b.spot = { x, y, level: 'air' };
   b.el.classList.toggle('face-left', t.x < b.x);
   b.act('advise');
-  b.say(SAGE_FOR[t.def.id] || pick(SAGE), 4600, true);
-  await sleep(4800);
+  const line = SAGE_FOR[t.def.id] || pick(SAGE);
+  b.say(line, 4600, true);
+  await sleep(readMs(line) + 300);
   b.act(null);
   b.el.classList.remove('face-left');
   await sleep(300);
   await b.travelTo(pick(b.spots));
+  return true;
+}
+
+/* ---------------- ¿Qué vas a hacer con tu aguinaldo? (charla rápida entre dos que están en pantalla) ---------------- */
+async function aguiChat(a) {
+  const others = actors.filter((o) => o !== a && o.busy && o.el.classList.contains('on') && !(o.def.id === 'mouse' && o.layer === 'back') && AGUI_PLANS[o.def.id]);
+  if (!others.length) return false;
+  const t = pick(others);
+  a.el.classList.toggle('face-left', t.x < a.x);
+  a.say(pick(AGUI_ASK), 2600, true);
+  await sleep(2600);
+  const ans = pick(AGUI_PLANS[t.def.id]);
+  const wait = t.def.id === 'bird' ? readMs(ans) : 3400;
+  t.say(ans, wait, true);
+  await sleep(wait);
+  if (/hendapait/i.test(ans) && Math.random() < 0.6) {
+    a.say(pick(['¡Hendapaitéma también el mío! 😂', 'Igual que todos, che 😂', 'Ya sabía… ¡hendapaitéma! 💸']), 2400, true);
+    await sleep(2400);
+  }
+  a.el.classList.remove('face-left');
   return true;
 }
 
@@ -1228,6 +1266,138 @@ const SCENES = [
       K.act('flip'); await sleep(2400);
       K.act(null); L.act(null);
       await Promise.all([K.exit(), L.exit()]);
+    },
+  },  {
+    // 32) ¿Qué vas a hacer con tu aguinaldo? — el oso ya tiene todo destinado
+    cast: ['pig', 'bear'],
+    async run() {
+      const G = A.pig, O = A.bear;
+      await Promise.all([G.enter(), O.enter()]);
+      G.act('chipa'); G.say('Oso, ¿qué vas a hacer con tu aguinaldo? 🐷', 2600, true);
+      await sleep(2600);
+      O.act('terere'); O.say('Hendapaitéma 🐻', 2200, true);
+      await sleep(2200);
+      G.act('gauge'); G.say('¿Todo? ¿Ni un poquito para ahorrar?', 2600, true);
+      await sleep(2600);
+      O.act('watch'); O.say('Todo. Hasta el último guaraní ya tiene dueño: el asado del 24 🥩', 3200, true);
+      await sleep(3200);
+      G.act('dream'); G.say('…¿y estoy invitado? 😍', 2400, true);
+      await sleep(2600);
+      O.act('dance'); O.say('¡Si traés la chipa, sí! 😂', 2400, true);
+      await sleep(2800);
+      G.act(null); O.act(null);
+      await Promise.all([G.exit(), O.exit()]);
+    },
+  },
+  {
+    // 33) Al pinscher no le gusta que le pregunten
+    cast: ['rabbit', 'pinscher'],
+    async run() {
+      const R = A.rabbit, P = A.pinscher;
+      await P.enter(); P.act('struggle');
+      await R.enter();
+      R.act('bell'); R.say('¡Riiing! Pinscher, ¿qué vas a hacer con tu aguinaldo? 🚲', 2800, true);
+      await sleep(2800);
+      P.act('bark'); P.say('¡HENDAPAITÉMA! 😤', 2000, true);
+      await sleep(2000);
+      R.act('carrot'); R.say('Tranqui… ¿en qué, por ejemplo?', 2400, true);
+      await sleep(2400);
+      P.act('growl'); P.say('¡Bulón nuevo, llave de torque nueva… y un psicólogo! GRR', 3200, true);
+      await sleep(3200);
+      R.act('wheelie'); R.say('¡Me parece una muy buena inversión! 😂', 2600, true);
+      await sleep(1200);
+      await R.exit();
+      P.act('tremble'); await sleep(1800);
+      P.act(null); await P.exit();
+    },
+  },
+  {
+    // 34) El pulpo responde a todo con su frase
+    cast: ['monkey', 'octo'],
+    async run() {
+      const K = A.monkey, Oc = A.octo;
+      await Oc.enter(); Oc.act('check');
+      await come(K, 470, FLOOR);
+      K.act('selfie'); K.say('Pulpo, ¿ya sabés qué vas a hacer con el aguinaldo? 🐒', 2800, true);
+      await sleep(2800);
+      Oc.act('wave'); Oc.say('¡SEEEEEE! 🐙', 1800, true);
+      await sleep(1800);
+      K.act('chest'); K.say('¿Sí qué? ¿Qué vas a comprar?', 2400, true);
+      await sleep(2400);
+      Oc.act('juggle'); Oc.say('Ocho pares de zapatillas… ¡SEEEEEE! 👟', 2800, true);
+      await sleep(2800);
+      K.act('laugh'); K.say('¿Y te alcanza para tanto? 😂', 2200, true);
+      await sleep(2200);
+      Oc.act('coffee'); Oc.say('¡SEEEEEE! …bueno, hendapaitéma igual 💸', 2800, true);
+      await sleep(3000);
+      K.act('flip'); await sleep(1600);
+      K.act(null); Oc.act(null);
+      await Promise.all([K.exit(), Oc.exit()]);
+    },
+  },
+  {
+    // 35) Don Anó explica qué significa hendapaitéma
+    cast: ['duck', 'bird'],
+    async run() {
+      const D = A.duck, B = A.bird;
+      await D.enter(); await come(B, 1440, lightsY(1440) + 6);
+      D.act('measure'); D.say('Don Anó, todos dicen «hendapaitéma»… ¿qué significa? 🦆', 3000, true);
+      await sleep(3000);
+      B.act('advise');
+      const l1 = 'Hendapaitéma: «ya tiene su lugar». El aguinaldo llega… y ya sabe a dónde tiene que ir 💸';
+      B.say(l1, 0, true); await sleep(readMs(l1));
+      D.act('quack'); D.say('¡Ah! Como el mío: a pagar todo lo que rompí en el año ¡CUAC!', 3000, true);
+      await sleep(3000);
+      B.act('ponder');
+      const l2 = 'Por eso, mitã: ¡menos tropezones y más aguinaldo para vos! 😉';
+      B.say(l2, 0, true); await sleep(readMs(l2));
+      D.act('trip'); D.say('…lo intento ¡CUAC! 💥', 2200, true);
+      await sleep(2600);
+      D.act(null); B.act(null);
+      await Promise.all([D.exit(), B.exit()]);
+    },
+  },
+  {
+    // 36) El ratón se ofrece a "cuidar" el aguinaldo del chanchito
+    cast: ['mouse', 'pig'],
+    async run() {
+      const M = A.mouse, G = A.pig;
+      await G.enter(); G.act('phone');
+      await come(M, 860, FLOOR);
+      M.act('cheese'); M.say('Chanchito, ¿qué vas a hacer con tu aguinaldo? 🐭', 2600, true);
+      await sleep(2600);
+      G.act('chipa'); G.say('Comer. Ese es todo el plan 🐷 ¿Y vos?', 2600, true);
+      await sleep(2600);
+      M.act('salute'); M.say('Yo me ofrezco a cuidar el tuyo… en mi cueva 😏', 2800, true);
+      await sleep(2800);
+      G.act('angry'); G.say('¡NI LO SUEÑES! Hendapaitéma, ¡y vos no estás en la lista! 😤', 3200, true);
+      await sleep(1400);
+      await M.moveTo(1500, FLOOR, { mode: 'run' });
+      M.say('¡Era un chiste! 😅', 1800, true);
+      await sleep(1800);
+      G.act(null); M.act(null);
+      await Promise.all([G.exit(), M.exit()]);
+    },
+  },
+  {
+    // 37) El loro difunde la encuesta del taller
+    cast: ['parrot', 'rabbit'],
+    async run() {
+      const L = A.parrot, R = A.rabbit;
+      await come(L, 1150, 238);
+      await R.enter();
+      L.act('radio'); L.say('📻 Encuesta del taller: ¿en qué van a gastar el aguinaldo?', 3000, true);
+      await sleep(3000);
+      R.act('delivery'); R.say('Cubiertas para la bici y zanahorias para todo el año 🥕', 2800, true);
+      await sleep(2800);
+      L.act('talk'); L.say('Resultado: 1 conejo con plan… ¡y 9 que dijeron hendapaitéma! 🦜', 3200, true);
+      await sleep(3200);
+      R.act('wheelie'); R.say('¡Hendapaitéma también el mío, entonces! 😂', 2600, true);
+      await sleep(1500);
+      L.act('mimic'); L.say('¡Hendapaitéma! ¡Hendapaitéma! 🦜', 2400, true);
+      await sleep(2600);
+      R.act(null); L.act(null);
+      await Promise.all([L.exit(), R.exit()]);
     },
   },
 ];

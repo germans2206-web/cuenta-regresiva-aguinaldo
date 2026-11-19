@@ -445,14 +445,14 @@ const octo = {
 .c-octo.act-multi .root{animation:bob .7s ease-in-out infinite;--y:-5px}
 .c-octo.act-wave .root{animation:osc .6s ease-in-out infinite alternate;--a:-4deg;--b:4deg}`,
   actions: [
-    { id: 'pcb', dur: 4.4, hide: ['d-tl'], say: ['Soldando la placa del reloj: 8 brazos, 0 cortocircuitos 🐙', 'Resistencia de 220 ohm… soldada ✔'] },
-    { id: 'multi', dur: 5, hide: ['d-tl'], say: ['8 brazos y aún así no alcanzan para tantas OT', 'Llave, destornillador, aceite y planilla… ¡multitarea!'] },
+    { id: 'pcb', dur: 4.4, hide: ['d-tl'], say: ['Soldando la placa del reloj: 8 brazos, 0 cortocircuitos 🐙', 'Resistencia de 220 ohm… soldada ✔', '¿Funciona la placa? ¡SEEEEEE! ⚡'] },
+    { id: 'multi', dur: 5, hide: ['d-tl'], say: ['8 brazos y aún así no alcanzan para tantas OT', '¿Que si llego con las OT? ¡SEEEEEE! 🐙', 'Llave, destornillador, aceite y planilla… ¡multitarea!'] },
     { id: 'valve', dur: 4.5, hide: ['d-tl', 'd-mouth'], say: ['Cerrando la válvula de gastos hasta el 15 💸', 'Esta válvula está más dura que el bolsillo a fin de mes'] },
     { id: 'ink', dur: 3.5, say: ['¡Uy! Me asustó el compresor 😳', '¡Perdón! Tinta en todo el taller…'] },
-    { id: 'check', dur: 4.5, hide: ['d-tl'], say: ['Preventivo ✔ Lubricación ✔ Aguinaldo ⏳', 'Checklist: aguinaldo ⏳ banco abierto ✔ …¿seguro? 🤔', 'Checklist del día: sobrevivir hasta el 15'] },
-    { id: 'juggle', dur: 4, hide: ['d-tl'], say: ['Malabares con los repuestos que faltan en el almacén', 'Tuercas M12, M10 y M8… ¡al aire!'] },
-    { id: 'coffee', dur: 3.8, hide: ['d-tl'], say: ['Un café por brazo… y me faltan seis ☕', 'Cafeína para aguantar hasta el 15 🐙'] },
-    { id: 'wave', dur: 3.5, hide: ['d-tl', 'd-eyes', 'd-mouth'], say: ['¡Mba\'éichapa, gente del taller! 👋', '¡Hola! ¿Ya cobraron? Yo tampoco'] },
+    { id: 'check', dur: 4.5, hide: ['d-tl'], say: ['Preventivo ✔ Lubricación ✔ Aguinaldo ⏳', 'Checklist: aguinaldo ⏳ banco abierto ✔ …¿seguro? 🤔', 'Checklist del día: sobrevivir hasta el 15', '¿Preventivo al día? ¡SEEEEEE! ✔'] },
+    { id: 'juggle', dur: 4, hide: ['d-tl'], say: ['Malabares con los repuestos que faltan en el almacén', 'Tuercas M12, M10 y M8… ¡al aire!', '¡SEEEEEE! ¡Ocho tuercas a la vez!'] },
+    { id: 'coffee', dur: 3.8, hide: ['d-tl'], say: ['Un café por brazo… y me faltan seis ☕', 'Cafeína para aguantar hasta el 15 🐙', '¿Otro café? ¡SEEEEEE! ☕'] },
+    { id: 'wave', dur: 3.5, hide: ['d-tl', 'd-eyes', 'd-mouth'], say: ['¡Mba\'éichapa, gente del taller! 👋', '¡Hola! ¿Ya cobraron? Yo tampoco', '¿Listos para el aguinaldo? ¡SEEEEEE! 🐙'] },
   ],
 };
 
@@ -1211,6 +1211,21 @@ const monkey = {
     { id: 'switch', scene: true, hide: ['d-al', 'd-ar'] },
     { id: 'laugh', scene: true, hide: ['d-al', 'd-ar', 'd-eyes', 'd-mouth'] },
   ],
+};
+
+// ¿Qué vas a hacer con tu aguinaldo? (hendapaitéma = "ya tiene su lugar": ya sabe a dónde va)
+export const AGUI_ASK = ['Che, ¿qué vas a hacer con tu aguinaldo? 💸', '¿Y vos? ¿En qué se te va el aguinaldo?', '¿Ya pensaste en qué gastar el aguinaldo?', 'Pregunta seria: ¿tu aguinaldo ya tiene destino?'];
+export const AGUI_PLANS = {
+  bear: ['Hendapaitéma 🐻 Asado para todo el taller', 'Un colchón nuevo… ¡para guardar el aguinaldo adentro!', 'Hendapaitéma: careta de soldar nueva y tereré de por vida 🧉'],
+  bird: ['El sabio guarda la mitad… la otra mitad, hendapaitéma 🐦', 'Hendapaitéma: anteojos nuevos y más libros de ñe\'ẽnga 📚', 'Primero las deudas, mitãnguéra. Después… hendapaitéma'],
+  octo: ['¡SEEEEEE! ¡Ocho pares de zapatillas! 👟', 'Hendapaitéma… ¡SEEEEEE! 🐙', '¿Si ya lo gasté en mi cabeza? ¡SEEEEEE!'],
+  rabbit: ['Cubiertas nuevas pa\' la bici… y zanahorias para todo el año 🥕', 'Hendapaitéma: un cambio de 21 velocidades 🚲', 'Llevarlo rapidito al súper antes de que se escape'],
+  duck: ['Hendapaitéma: pagar todo lo que rompí en el año 🦆', 'Un casco nuevo… este ya tiene demasiadas abolladuras ⛑️', 'Comprar una escalera que no se mueva ¡CUAC!'],
+  pinscher: ['¡HENDAPAITÉMA! ¡Y no me pregunten más! 😤', '¡Un bulón M24 nuevo para vengarme del viejo! GRR', 'Una llave de torque… ¡y un psicólogo! 🐕'],
+  pig: ['Hendapaitéma: chipa, sopa paraguaya y milanesa 🐷', 'Pagar la tarjeta… y volver a usarla el 16 💳', 'Comer. Ese es todo el plan 🍽️'],
+  mouse: ['¿Gastar? Yo lo ahorro… en la cueva, con los repuestos 🐭', 'Queso importado y un candado para mi cofre 🧀', 'Hendapaitéma: ¡más cajones para guardar lo que encuentro! 😏'],
+  parrot: ['¡Hendapaitéma! ¡Hendapaitéma! 🦜', 'Clases de canto para la fiesta del taller 🎶', '¡Lo que diga el loro: hendapaitéma, hendapaitéma!'],
+  monkey: ['Bananas, un parlante y la previa del 24 🍌🔊', 'Hendapaitéma: celular nuevo pa\' más selfies 🤳', '¡Un columpio en el taller! …¿se puede, jefe? 🐒'],
 };
 
 export const CHARACTERS = [bear, bird, octo, rabbit, duck, pinscher, pig, mouse, parrot, monkey];
