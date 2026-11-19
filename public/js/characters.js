@@ -668,7 +668,7 @@ const duck = {
 const BLK = '#1f1f24', TAN = '#c8743a';
 const pinscher = {
   id: 'pinscher', name: 'Pinscher', vb: [300, 240], anchor: [100, 232], scale: 1.0,
-  station: { x: 1290, y: 1046 }, layer: 'front', enter: 'drop', gap: 0.5,
+  station: { x: 1290, y: 1046 }, layer: 'front', enter: 'walkR', enterMode: 'run', gap: 0.5,
   travel: 'walk', walkSpeed: 0.75, roamChance: 0.55, tripChance: 0.2,
   spots: [{ x: 1290, y: 1046 }, { x: 1000, y: 1046 }, { x: 720, y: 1046 }, { x: 1560, y: 1046 }, { x: 480, y: 1046 }],
   svg: `

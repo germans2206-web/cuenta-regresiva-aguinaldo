@@ -314,8 +314,8 @@ class Actor {
     this.setLayer(d.layer);
     this.show();
     switch (d.enter) {
-      case 'walkL': this.place(st.x - (st.x + this.w + 60), st.y); await this.moveTo(st.x, st.y, { mode: 'walk' }); break;
-      case 'walkR': this.place(1920 + (st.x - this.left) + 60, st.y); await this.moveTo(st.x, st.y, { mode: 'walk' }); break;
+      case 'walkL': this.place(st.x - (st.x + this.w + 60), st.y); await this.moveTo(st.x, st.y, { mode: d.enterMode || 'walk' }); break;
+      case 'walkR': this.place(1920 + (st.x - this.left) + 60, st.y); await this.moveTo(st.x, st.y, { mode: d.enterMode || 'walk' }); break;
       case 'ride': this.place(st.x - (st.x + this.w + 60), st.y); await this.moveTo(st.x, st.y, { mode: 'ride', easing: 'cubic-bezier(.2,.6,.4,1)' }); break;
       case 'fly': this.place(st.x + (st.x < 960 ? -700 : 700), st.y - 460); await this.moveTo(st.x, st.y, { mode: 'fly', dur: 2000, easing: 'ease-out' }); break;
       case 'rise': this.place(st.x, st.y + 300); await this.moveTo(st.x, st.y, { mode: 'none', dur: 1400, easing: 'cubic-bezier(.3,1.3,.5,1)' }); break;
@@ -350,8 +350,8 @@ class Actor {
     } else {
       if (!this.atHome()) await this.moveTo(st.x, st.y, { mode: 'walk' });
       switch (d.enter) {
-        case 'walkL': await this.moveTo(-this.w - 60 + (st.x - this.left), st.y, { mode: 'walk' }); break;
-        case 'walkR': await this.moveTo(1920 + (st.x - this.left) + 60, st.y, { mode: 'walk' }); break;
+        case 'walkL': await this.moveTo(-this.w - 60 + (st.x - this.left), st.y, { mode: d.enterMode || 'walk' }); break;
+        case 'walkR': await this.moveTo(1920 + (st.x - this.left) + 60, st.y, { mode: d.enterMode || 'walk' }); break;
         case 'ride': await this.moveTo(1920 + (st.x - this.left) + 60, st.y, { mode: 'ride', easing: 'cubic-bezier(.6,0,.8,.4)' }); break;
         case 'fly': await this.moveTo(st.x - 900, st.y - 500, { mode: 'fly', dur: 1800, easing: 'ease-in' }); break;
         case 'rise': await this.moveTo(st.x, st.y - 24, { mode: 'none', dur: 250, easing: 'ease-out' }); await this.moveTo(st.x, st.y + 300, { mode: 'none', dur: 900, easing: 'ease-in' }); break;
