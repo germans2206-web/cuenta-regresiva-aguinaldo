@@ -37,6 +37,8 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
 - `?demo=20` → prueba: la cuenta llega a cero en 20 segundos.
 - `?escena=0` … `?escena=31` (26–31: chistes del caso Ueno) (15–17: préstamos "hasta que cobre el aguinaldo"; 18–25: trabajos en pareja) → muestra una escena entre animales puntual.
 - `?parada=0` … `?parada=2` → muestra una parada puntual (perno robado, apagón, atasco).
+- `?lite` → fuerza el modo liviano (para TVs o PCs modestas). Igual se activa solo si la pantalla no llega a 45 cuadros por segundo.
+- `?hd` → fuerza la calidad completa y desactiva el ajuste automático.
 
 ## Desarrollo y despliegue (Cloudflare Workers – Static Assets)
 ```bash
