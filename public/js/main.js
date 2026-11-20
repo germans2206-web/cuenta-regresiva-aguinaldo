@@ -1709,7 +1709,7 @@ if (params.has('parada')) {
   setTimeout(() => director.breakdown(parseInt(params.get('parada'), 10) || 0), 1200);
 } else if (params.has('escena')) {
   // ?escena=N  → prueba una escena puntual
-  const n = parseInt(params.get('escena'), 10) || 0;
+  const n = Math.abs(parseInt(params.get('escena'), 10) || 0);
   setTimeout(() => { const s = SCENES[n % SCENES.length]; s.cast.forEach((id) => (A[id].busy = true)); s.run(); }, 1200);
 } else if (!params.has('quieto')) director.loop();
 
