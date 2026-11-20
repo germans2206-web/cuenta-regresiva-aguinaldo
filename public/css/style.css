@@ -379,3 +379,6 @@ html.no3d .vignette { display: block; }
 .lbl { font: 700 21px "Cinzel", serif; letter-spacing: 4px; color: var(--amber); }
 #panel.calibrating .clock { box-shadow: none; }
 #panel.calibrating .days-box, #panel.calibrating .hms { box-shadow: inset 0 0 30px #000, 0 0 0 2px #000, 0 0 0 4px #3dff7a, 0 0 40px rgba(61,255,122,.45); }
+/* columnas del mismo ancho y etiquetas centradas sin el hueco del espaciado final */
+.hms .unit { width: 164px; }
+.lbl { display: block; text-align: center; letter-spacing: 3px; margin-right: -3px; white-space: nowrap; }
