@@ -2,6 +2,7 @@
   "name": "cuenta-regresiva-aguinaldo",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Panel de cuenta regresiva al aguinaldo (15/12) para el taller de mantenimiento, con animales animados y fondo 3D.",
   "type": "module",
   "scripts": {

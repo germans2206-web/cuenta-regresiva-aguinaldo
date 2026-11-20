@@ -1,4 +1,22 @@
-# ⚙️ Cuenta regresiva al Aguinaldo — Taller de Mantenimiento
+# ⚙️ Para el aguinaldo falta…
+
+**Panel animado de cuenta regresiva al cobro del aguinaldo, hecho para proyectar en la TV del taller de mantenimiento.**
+
+**[Ver en vivo →](https://cuenta-regresiva-aguinaldo.pages.dev)**
+
+![Panel con reloj digital rojo, engranajes dorados estilo reloj suizo y animales con casco trabajando](docs/preview.jpg)
+
+Un reloj de 7 segmentos montado sobre una maquinaria estilo relojería suiza que funciona de verdad (engranajes que engranan, volante, rueda de escape, cables con corriente), un fondo 3D y **10 personajes** con personalidad propia que hacen mantenimiento, se pelean, se piden plata prestada «hasta que cobre el aguinaldo» y se preguntan en qué lo van a gastar (*hendapaitéma*). Cada tanto el reloj **se rompe**, todos ayudan a repararlo y alguien lo **calibra** con la hora real. El 15 de diciembre, fiesta.
+
+| | |
+|---|---|
+| **Stack** | HTML + CSS + JavaScript sin frameworks · SVG animado · Three.js (fondo 3D) · esbuild |
+| **Hosting** | Cloudflare Pages, desplegado automáticamente desde GitHub |
+| **Rendimiento** | Pensado para TVs: piezas animadas en capas de GPU, 3D a resolución reducida y modo liviano automático |
+| **Seguridad** | Sitio 100 % estático, sin terceros, CSP estricta y cabeceras de seguridad ([SECURITY.md](SECURITY.md)) |
+| **Idioma** | Español de Paraguay, con refranes (ñe'ẽnga) en guaraní |
+
+## Detalle del proyecto
 
 Estética "calibre nocturno" de relojería suiza: platina con perlado, puentes de rodio con Côtes de Genève, ruedas de oro y acero esqueletadas, rubíes, volante con espiral y rueda de escape que avanza un diente por segundo.
 
@@ -48,3 +66,7 @@ npm run deploy   # compila y publica en Cloudflare
 ```
 El sitio es 100 % estático (`public/`). `public/js/scene3d.bundle.js` se genera desde `src/scene3d.js`
 con esbuild y está versionado, así Cloudflare puede publicar sin paso de build.
+
+## Licencia
+
+[MIT](LICENSE) © 2026 Germán Domínguez. Personajes, ilustraciones y textos son originales del proyecto.
