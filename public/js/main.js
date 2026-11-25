@@ -1933,6 +1933,8 @@ onWeather((w) => {
   setWeatherFx(w);
   const chip = $('#wxChip');
   if (chip) chip.innerHTML = `ASUNCIÓN <b>${Math.round(w.temp)}°C</b> ${w.icon} ${w.label}`;
+  // el cartel muestra el clima nuevo de inmediato (sin esperar a que termine la vuelta)
+  if (!tickerAlarm && !director.party) { tickerAnim?.cancel(); runTicker(); }
 });
 startWeather(params);
 // si sigue lloviendo, cada tanto se abre otra gotera (y alguien la tendrá que tapar)
