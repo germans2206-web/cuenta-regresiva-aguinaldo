@@ -1,5 +1,8 @@
 import { buildMachine, lightsY, machineCtl } from './machine.js';
 import { CHARACTERS, SAGE, SAGE_FOR, AGUI_ASK, AGUI_PLANS } from './characters.js';
+import { W, startWeather, onWeather } from './weather.js';
+import { buildWeatherFx, setWeatherFx, LEAKS, openLeaks, setPatched, isRainy, lightning } from './weatherfx.js';
+import { WX_LINES, WX_CHAR, wxGroup } from './weatherlines.js';
 
 /* ------------------------------------------------------------------
    Configuración
@@ -36,6 +39,7 @@ fit();
 
 /* ---------------- Maquinaria ---------------- */
 buildMachine($('#machine'), $('#frontProps'));
+buildWeatherFx($('#stage'), $('#bubbles'));
 
 /* ---------------- Reloj de 7 segmentos ---------------- */
 const SEGS = (() => {
@@ -115,7 +119,7 @@ let sepOff = null;
 const seps = document.querySelectorAll('.sep');
 tick();
 
-const fill = (t) => t.replace('{d}', remain.d).replace('{h}', remain.h).replace('{m}', remain.m);
+const fill = (t) => t.replace('{d}', remain.d).replace('{h}', remain.h).replace('{m}', remain.m).replaceAll('{T}', W.temp != null ? Math.round(W.temp) : '');
 
 /* ---------------- Cartel LED ---------------- */
 const MESSAGES = [
@@ -140,10 +144,23 @@ const MESSAGES = [
 ];
 const ALARM = ['⚠ PARADA DE EMERGENCIA — RELOJ DETENIDO ⚠', 'TODO EL EQUIPO DE MANTENIMIENTO AL TALLER', '⚠ NO SE PREOCUPEN: EL AGUINALDO SIGUE EN PIE ⚠'];
 let tickerAlarm = false, tickerAnim = null;
+const WX_TICKER = {
+  lluvia: ['DÍA DE LLUVIA: SE RUEGA TAPAR GOTERAS Y NO DEJAR LA ROPA AFUERA 👕', 'POR LA LLUVIA, EL TERERÉ SE REEMPLAZA POR MATE COCIDO ☕', 'AVISO: CERRAR LAS VENTANAS DE LOS AUTOS 🚗'],
+  llovizna: ['LLOVIZNA EN ASUNCIÓN: PARAGUAS A MANO ☂️', 'POR LA LLOVIZNA, EL TERERÉ SE REEMPLAZA POR MATE COCIDO ☕'],
+  tormenta: ['⛈ ALERTA DE TORMENTA: DESENCHUFAR LO QUE NO SE USE', 'OJALÁ NO CAIGA GRANIZO: LOS PARABRISAS DEL TALLER YA SUFRIERON BASTANTE 😩'],
+  calor: ['☀ CALOR EXTREMO: HIDRATACIÓN OBLIGATORIA CADA 30 MINUTOS 💧', 'TERMÓMETRO DEL TALLER: {T}° — SE RECOMIENDA TERERÉ BIEN FRÍO 🧉'],
+  frio: ['FRÍO EN ASUNCIÓN: CHIPA CALIENTE Y MATE COCIDO EN LA PAUSA ☕'],
+  sol: ['DÍA DE SOL EN ASUNCIÓN: PROTECTOR SOLAR PARA LOS QUE TRABAJAN AFUERA ☀️'],
+};
+WX_TICKER.granizo = WX_TICKER.tormenta;
+function weatherTicker() {
+  if (!W.ok) return [];
+  return [`CLIMA EN ASUNCIÓN: ${Math.round(W.temp)}°C · ${W.label} ${W.icon}`, ...(WX_TICKER[W.kind] || [])];
+}
 const track = $('#tickerTrack');
 function setTickerAlarm(on) { if (on === tickerAlarm) return; tickerAlarm = on; tickerAnim?.cancel(); runTicker(); }
 function runTicker() {
-  track.innerHTML = (tickerAlarm ? ALARM : MESSAGES).map((m) => `<span>${fill(m)}</span>`).join('');
+  track.innerHTML = (tickerAlarm ? ALARM : [...weatherTicker(), ...MESSAGES]).map((m) => `<span>${fill(m)}</span>`).join('');
   track.style.color = tickerAlarm ? '#ff5a3c' : '';
   const win = track.parentElement.clientWidth;
   const w = track.scrollWidth;
@@ -395,6 +412,7 @@ class Actor {
       if (this.def.id === 'bird' && Math.random() < 0.55 && (await sageVisit(this))) continue;
       if (this.def.id === 'pinscher' && Math.random() < (this.def.tripChance || 0)) { await zoomies(this); continue; }
       if (this.def.id !== 'bird' && Math.random() < 0.14 && (await aguiChat(this))) continue;
+      if (W.ok && Math.random() < (wxGroup(W.kind) ? 0.2 : 0.07) && (await weatherChat(this))) continue;
       const a = this.act(this.nextAction().id);
       let wait = a.dur * 1000;
       if (a.say && Math.random() < 0.7) {
@@ -518,6 +536,27 @@ async function aguiChat(a) {
     await sleep(2400);
   }
   a.el.classList.remove('face-left');
+  return true;
+}
+
+/* ---------------- Comentarios sobre el clima real de Asunción ---------------- */
+function weatherLine(id) {
+  const g = wxGroup(W.kind), own = g && WX_CHAR[g]?.[id];
+  const pool = own && Math.random() < 0.5 ? own : WX_LINES[W.kind];
+  return pool ? pick(pool) : null;
+}
+async function weatherChat(a) {
+  const line = weatherLine(a.def.id);
+  if (!line) return false;
+  if (a.def.id === 'bear' && wxGroup(W.kind) === 'hot') a.act('sweat');
+  a.say(line, a.def.id === 'bird' ? readMs(line) : 3600, true);
+  await sleep(a.def.id === 'bird' ? readMs(line) + 300 : 3800);
+  // a veces otro que está en pantalla le responde
+  const others = actors.filter((o) => o !== a && o.busy && o.el.classList.contains('on') && !(o.def.id === 'mouse' && o.layer === 'back'));
+  if (others.length && Math.random() < 0.45) {
+    const o = pick(others), r = weatherLine(o.def.id);
+    if (r && r !== line) { o.say(r, o.def.id === 'bird' ? readMs(r) : 3400, true); await sleep(o.def.id === 'bird' ? readMs(r) : 3400); }
+  }
   return true;
 }
 
@@ -1399,6 +1438,189 @@ const SCENES = [
       R.act(null); L.act(null);
       await Promise.all([L.exit(), R.exit()]);
     },
+  },  {
+    // 38) LLUVIA: gotera sobre el reloj — el pato la descubre, el mono la tapa
+    cast: ['duck', 'monkey'], when: () => isRainy(W.kind) && !LEAKS[0].patched,
+    async run() {
+      const D = A.duck, K = A.monkey, L = LEAKS[0];
+      await D.enter();
+      D.act('measure'); D.say('¡Gotera justo sobre el reloj! ¡CUAC! 💧', 2800, true);
+      await sleep(2800);
+      await come(K, L.x + 40, 238);
+      K.act('chest'); K.say('¡Yo la tapo! ¡Pásenme la cinta! 🐒', 2400, true);
+      await sleep(2400);
+      K.act('install'); K.say('Cinta, masilla y fe… 🔧', 2600, true);
+      await sleep(2800);
+      setPatched(L, true);
+      K.act('laugh'); K.say('¡Gotera tapada! ✅', 2200, true);
+      D.act('quack'); D.say('…igual me gustaba la lluvia adentro 🦆', 2600, true);
+      await sleep(2800);
+      D.act(null); K.act(null);
+      await Promise.all([D.exit(), K.exit()]);
+    },
+  },
+  {
+    // 39) LLUVIA: el pájaro y el loro tapan las goteras de los costados volando
+    cast: ['bird', 'parrot'], when: () => isRainy(W.kind) && (!LEAKS[1].patched || !LEAKS[2].patched),
+    async run() {
+      const B = A.bird, P = A.parrot, l1 = LEAKS[1], l2 = LEAKS[2];
+      await Promise.all([come(B, l1.x + 30, lightsY(l1.x + 30) + 6), come(P, l2.x - 30, lightsY(l2.x - 30) + 6)]);
+      P.act('radio'); P.say('📻 ¡Goteras en el sector norte y sur! ¡Equipo aéreo en acción! 🦜', 3000, true);
+      await sleep(3000);
+      B.act('tie');
+      const l = '«Oky», mitã: está lloviendo. Gotera que no se tapa a tiempo, se vuelve laguna 🌧️';
+      B.say(l, 0, true); await sleep(readMs(l));
+      setPatched(l1, true);
+      P.act('talk'); P.say('¡Tapada! ¡Tapada! ¡Sigo con la mía! 🦜🔧', 2600, true);
+      await sleep(2600);
+      setPatched(l2, true);
+      P.act('dance'); P.say('¡Cero goteras! ¡Cero goteras! 🦜', 2400, true);
+      await sleep(2600);
+      B.act(null); P.act(null);
+      await Promise.all([B.exit(), P.exit()]);
+    },
+  },
+  {
+    // 40) LLUVIA/TORMENTA: miedo al granizo
+    cast: ['bear', 'rabbit'], when: () => isRainy(W.kind),
+    async run() {
+      const O = A.bear, R = A.rabbit;
+      await Promise.all([O.enter(), R.enter()]);
+      R.act('bell'); R.say('Dicen que con esta lluvia puede caer granizo… 🌧️', 2800, true);
+      await sleep(2800);
+      O.act('sweat'); O.say('¡Ojalá que no! La última vez me rompió el parabrisas 😩', 3000, true);
+      await sleep(3000);
+      R.act('carrot'); R.say('Yo tapé la bici con una lona y dos cajas 🚲', 2600, true);
+      await sleep(2600);
+      O.act('watch'); O.say('Voy a estacionar el auto debajo del techo del taller… por las dudas 🚗', 3000, true);
+      await sleep(3200);
+      O.act(null); R.act(null);
+      await Promise.all([O.exit(), R.exit()]);
+    },
+  },
+  {
+    // 41) LLUVIA: la ventana del auto
+    cast: ['pig', 'parrot'], when: () => isRainy(W.kind),
+    async run() {
+      const G = A.pig, P = A.parrot;
+      await G.enter(); G.act('phone');
+      await come(P, 1150, 238);
+      G.act('angry'); G.say('¡NOOO! ¡Dejé la ventana del auto abierta! 🚗💦', 2800, true);
+      await sleep(2800);
+      P.act('mimic'); P.say('¡Auto con pileta incluida! ¡Pileta incluida! 🦜', 2800, true);
+      await sleep(2800);
+      G.act('dream'); G.say('…bueno, por lo menos se lava el tapizado 😅', 2600, true);
+      await sleep(2800);
+      G.act(null); P.act(null);
+      await Promise.all([G.exit(), P.exit()]);
+    },
+  },
+  {
+    // 42) LLUVIA: la ropa tendida
+    cast: ['octo', 'mouse'], when: () => isRainy(W.kind),
+    async run() {
+      const Oc = A.octo, M = A.mouse;
+      await Oc.enter(); Oc.act('check');
+      await come(M, 520, FLOOR);
+      Oc.act('wave'); Oc.say('¡Dejé la ropa tendida afuera para que se seque! 👕💧', 2800, true);
+      await sleep(2800);
+      M.act('cheese'); M.say('¿Cuánta ropa era?', 2000, true);
+      await sleep(2000);
+      Oc.act('juggle'); Oc.say('Ocho remeras, ocho medias… ¿todas mojadas? ¡SEEEEEE! 🐙', 3000, true);
+      await sleep(3000);
+      M.act('salute'); M.say('Si querés te la cuido… en mi cueva 😏', 2400, true);
+      await sleep(2600);
+      Oc.act(null); M.act(null);
+      await Promise.all([Oc.exit(), M.exit()]);
+    },
+  },
+  {
+    // 43) TORMENTA: relámpago y miedo al corte de luz
+    cast: ['pinscher', 'bear'], when: () => W.kind === 'tormenta' || W.kind === 'granizo',
+    async run() {
+      const P = A.pinscher, O = A.bear;
+      await Promise.all([P.enter(), O.enter()]);
+      lightning();
+      P.act('tremble'); P.say('¡¿QUÉ FUE ESO?! 😱⚡', 2200, true);
+      await sleep(2200);
+      O.act('watch'); O.say('Un rayo… contá: uno, dos, tres…', 2400, true);
+      await sleep(2400);
+      P.act('bark'); P.say('¡TRUENO! ¡GUAU GUAU GUAU! ⛈️', 2200, true);
+      await sleep(2200);
+      O.act('sweat'); O.say('¡Que no se corte la luz, que el reloj necesita energía! ⚡', 3000, true);
+      await sleep(3200);
+      P.act(null); O.act(null);
+      await Promise.all([P.exit(), O.exit()]);
+    },
+  },
+  {
+    // 44) CALOR: chancho y oso
+    cast: ['pig', 'bear'], when: () => W.kind === 'calor',
+    async run() {
+      const G = A.pig, O = A.bear;
+      await Promise.all([G.enter(), O.enter()]);
+      G.act('dream'); G.say('¡{T} grados! Sudo como chancho… porque SOY chancho 🐷💦', 3000, true);
+      await sleep(3000);
+      O.act('sweat'); O.say('Con este pelaje es una tortura… 🐻🔥', 2600, true);
+      await sleep(2600);
+      O.act('terere'); O.say('¡Tereré bien frío para todos, ya! 🧉', 2600, true);
+      await sleep(2600);
+      G.act('chipa'); G.say('¿Y una chipa? …bueno, con este calor, mejor no 😅', 2800, true);
+      await sleep(3000);
+      G.act(null); O.act(null);
+      await Promise.all([G.exit(), O.exit()]);
+    },
+  },
+  {
+    // 45) CALOR: pato y mono
+    cast: ['duck', 'monkey'], when: () => W.kind === 'calor',
+    async run() {
+      const D = A.duck, K = A.monkey;
+      await D.enter();
+      await come(K, 700, FLOOR);
+      D.act('quack'); D.say('¿Alguien vio mi pileta? ¡Hace {T}°! 🦆☀️', 2800, true);
+      await sleep(2800);
+      K.act('selfie'); K.say('Freí un huevo sobre la chapa del taller. ¡Selfie! 🍳🤳', 2800, true);
+      await sleep(2800);
+      D.act('trip'); D.say('…me resbalé con el sudor ¡CUAC! 💥', 2400, true);
+      await sleep(2600);
+      D.act(null); K.act(null);
+      await Promise.all([D.exit(), K.exit()]);
+    },
+  },
+  {
+    // 46) CALOR: pulpo y conejo
+    cast: ['octo', 'rabbit'], when: () => W.kind === 'calor' || W.kind === 'sol',
+    async run() {
+      const Oc = A.octo, R = A.rabbit;
+      await Promise.all([Oc.enter(), R.enter()]);
+      R.act('tired'); R.say('Pulpo, ¿hace calor o soy yo? 🥵', 2400, true);
+      await sleep(2400);
+      Oc.act('wave'); Oc.say('¡SEEEEEE! 🐙☀️', 1800, true);
+      await sleep(1800);
+      R.act('ride'); R.say('Hoy pedaleo solo de bajada 🚲', 2400, true);
+      await sleep(2400);
+      Oc.act('coffee'); Oc.say('Yo me quedo en el tanque de agua fría… ¡SEEEEEE! 💧', 2800, true);
+      await sleep(3000);
+      Oc.act(null); R.act(null);
+      await Promise.all([Oc.exit(), R.exit()]);
+    },
+  },
+  {
+    // 47) FRÍO
+    cast: ['pinscher', 'parrot'], when: () => W.kind === 'frio',
+    async run() {
+      const P = A.pinscher, L = A.parrot;
+      await P.enter(); await come(L, 1150, 238);
+      P.act('tremble'); P.say('¡{T}°! ¡Qué frío! 🥶', 2200, true);
+      await sleep(2200);
+      L.act('mimic'); L.say('¡El pinscher tiembla! ¡Tiembla! …bueno, siempre tiembla 🦜', 3000, true);
+      await sleep(3000);
+      P.act('growl'); P.say('GRR… ¡pásenme el mate cocido! ☕', 2400, true);
+      await sleep(2600);
+      P.act(null); L.act(null);
+      await Promise.all([P.exit(), L.exit()]);
+    },
   },
 ];
 
@@ -1663,9 +1885,10 @@ const director = {
   async scene() {
     const visibles = actors.filter((a) => a.busy).length;
     if (visibles > 1) return false;
-    const options = SCENES.filter((s) => free(...s.cast));
+    const options = SCENES.filter((s) => free(...s.cast) && (!s.when || s.when()));
     if (!options.length) return false;
-    const sc = pick(options);
+    const wx = options.filter((s) => s.when);
+    const sc = wx.length && Math.random() < 0.55 ? pick(wx) : pick(options);
     sc.cast.forEach((id) => (A[id].busy = true));
     sc.run().catch((e) => console.warn('escena', e)).finally(() => {
       sc.cast.forEach((id) => { const a = A[id]; if (!director.party) { a.resetHome(); a.busy = false; a.lastShown = performance.now(); } });
@@ -1705,6 +1928,19 @@ const director = {
   },
 };
 window.__scenes = SCENES; window.__sage = sageVisit; window.__director = director;
+// clima real de Asunción: efectos, indicador del panel y frases de los personajes
+onWeather((w) => {
+  setWeatherFx(w);
+  const chip = $('#wxChip');
+  if (chip) chip.innerHTML = `ASUNCIÓN <b>${Math.round(w.temp)}°C</b> ${w.icon} ${w.label}`;
+});
+startWeather(params);
+// si sigue lloviendo, cada tanto se abre otra gotera (y alguien la tendrá que tapar)
+setInterval(() => {
+  if (!isRainy(W.kind)) return;
+  const closed = LEAKS.filter((L) => L.patched);
+  if (closed.length) setPatched(pick(closed), false);
+}, 9 * 60 * 1000);
 if (params.has('parada')) {
   setTimeout(() => director.breakdown(parseInt(params.get('parada'), 10) || 0), 1200);
 } else if (params.has('escena')) {

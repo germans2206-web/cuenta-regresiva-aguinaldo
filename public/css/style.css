@@ -382,3 +382,74 @@ html.no3d .vignette { display: block; }
 /* columnas del mismo ancho y etiquetas centradas sin el hueco del espaciado final */
 .hms .unit { width: 164px; }
 .lbl { display: block; text-align: center; letter-spacing: 3px; margin-right: -3px; white-space: nowrap; }
+
+/* ======================= CLIMA EN TIEMPO REAL ======================= */
+#weatherFx { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; pointer-events: none; z-index: 13; }
+#bubbles { z-index: 14; }
+:where(#weatherFx) > div { position: absolute; opacity: 0; transition: opacity 1.5s ease; }
+.wx-tint, .wx-warm, .wx-frost { inset: 0; }
+/* lluvia: velo frío + dos cortinas de agua a distinta velocidad (paralaje) */
+.wx-tint { background: linear-gradient(180deg, rgba(20,40,70,.32), rgba(10,20,40,.12) 60%, rgba(10,20,40,.22)); }
+.wx-rain { left: -48px; width: 1968px; top: -256px; height: 1336px; background-repeat: repeat; background-size: 512px 256px; will-change: transform; }
+.wx-rain-a { animation: rainfall .3s linear infinite; background-color: rgba(18,34,60,.34); }
+.wx-rain-b { animation: rainfall .22s linear infinite; }
+@keyframes rainfall { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-46px, 256px, 0); } }
+.wx-tormenta .wx-tint, .wx-granizo .wx-tint { opacity: .5; }
+.wx-rainy .wx-rain-a { opacity: calc(var(--rain, .6) * .8); }
+.wx-heavy .wx-rain-b { opacity: calc(var(--rain, .6) * .45); }
+.wx-rain-b { display: none; }
+.wx-heavy .wx-rain-b { display: block; }
+.wx-granizo .wx-rain-b { animation-duration: .3s; }
+body.lite .wx-rain-b { display: none; }
+/* relámpago */
+.wx-flash { inset: 0; background: radial-gradient(ellipse at 60% 10%, rgba(235,240,255,.95), rgba(200,215,255,.55) 45%, rgba(180,200,255,.25)); }
+.wx-flash.on { animation: flash 1.1s ease-out; }
+@keyframes flash { 0% { opacity: 0; } 6% { opacity: .75; } 12% { opacity: .1; } 20% { opacity: .55; } 45% { opacity: 0; } 100% { opacity: 0; } }
+/* calor: luz cálida y sol con rayos girando */
+.wx-warm { background: radial-gradient(ellipse at 88% 12%, rgba(255,186,80,.34), rgba(255,140,40,.14) 40%, rgba(255,120,30,0) 70%); }
+.wx-sun { left: 1640px; top: 96px; width: 300px; height: 300px; }
+.wx-sun::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255,214,110,.42) 0 7deg, rgba(255,214,110,0) 7deg 22deg);
+  -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%); mask: radial-gradient(circle, #000 25%, transparent 70%);
+  animation: sunspin 40s linear infinite; will-change: transform; }
+.wx-sun-core { position: absolute; left: 105px; top: 105px; width: 90px; height: 90px; border-radius: 50%; opacity: 1 !important;
+  background: radial-gradient(circle, #fff4c4, #ffc43d 55%, rgba(255,170,40,0) 72%); }
+@keyframes sunspin { to { transform: rotate(360deg); } }
+.wx-calor .wx-warm, .wx-calor .wx-sun { opacity: 1; }
+.wx-sol .wx-warm { opacity: .45; }
+.wx-sol .wx-sun { opacity: .55; }
+/* frío, nublado y niebla */
+.wx-frost { background: radial-gradient(ellipse at 50% 50%, rgba(200,225,255,0) 55%, rgba(205,228,255,.28) 100%); }
+.wx-frio .wx-frost { opacity: 1; }
+.wx-nublado .wx-tint, .wx-parcial .wx-tint { opacity: .3; }
+.wx-niebla .wx-frost { opacity: .9; }
+.wx-niebla .wx-tint { opacity: .4; }
+/* goteras */
+:where(#weatherFx) > .leak { position: absolute; top: 0; left: 0; width: 0; height: 0; opacity: 0; }
+.wx-rainy > .leak { opacity: 1; }
+.leak-stain { position: absolute; left: -26px; width: 52px; height: 20px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(90,130,180,.55), rgba(60,90,130,0) 70%); }
+.leak-patch { position: absolute; left: -22px; width: 44px; height: 26px; opacity: 0; transition: opacity .4s;
+  background: linear-gradient(35deg, transparent 40%, #b9b29c 40%, #d8d1b8 60%, transparent 60%),
+              linear-gradient(-35deg, transparent 40%, #b9b29c 40%, #d8d1b8 60%, transparent 60%); }
+.leak.patched .leak-patch { opacity: 1; }
+.drop { position: absolute; left: -5px; width: 10px; height: 14px; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: linear-gradient(160deg, #d9ecff, #5fa2ff); box-shadow: 0 0 6px rgba(140,190,255,.7);
+  animation: drip 1.9s cubic-bezier(.55,0,1,.45) infinite; will-change: transform, opacity; }
+@keyframes drip {
+  0% { transform: translateY(0) scale(.2); opacity: 0; }
+  20% { transform: translateY(2px) scale(1); opacity: 1; }
+  32% { transform: translateY(4px) scale(1, 1.15); opacity: 1; }
+  96% { transform: translateY(var(--fall)) scale(.9, 1.2); opacity: 1; }
+  100% { transform: translateY(var(--fall)) scale(.4); opacity: 0; }
+}
+.splash { position: absolute; left: -16px; width: 32px; height: 10px; border-radius: 50%;
+  border: 2px solid rgba(150,200,255,.8); border-top-color: transparent;
+  animation: splash 1.9s linear infinite; opacity: 0; will-change: transform, opacity; }
+@keyframes splash { 0%, 95% { transform: scale(.2); opacity: 0; } 97% { opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
+.leak.patched .drop, .leak.patched .splash { animation: none; opacity: 0; }
+.bucket { position: absolute; left: -30px; width: 60px; height: 54px; }
+.wx-chip { display: inline-flex; align-items: center; gap: 8px; color: #cfe3ff; }
+.wx-chip b { color: #fff; }
+.wx-chip:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .wx-rain, .wx-sun::before, .drop, .splash { animation: none; } }

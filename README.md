@@ -55,6 +55,7 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
 - `?demo=20` → prueba: la cuenta llega a cero en 20 segundos.
 - `?escena=0` … `?escena=37` (26–31: chistes del caso Ueno; 32–37: «¿qué vas a hacer con tu aguinaldo?» y hendapaitéma) (15–17: préstamos "hasta que cobre el aguinaldo"; 18–25: trabajos en pareja) → muestra una escena entre animales puntual.
 - `?parada=0` … `?parada=2` → muestra una parada puntual (perno robado, apagón, atasco).
+- `?clima=lluvia` (o `llovizna`, `tormenta`, `granizo`, `calor`, `frio`, `nublado`, `sol`, `niebla`) y `?temp=38` → fuerzan un clima para probar. Sin ese parámetro, el panel lee el **clima real de Asunción** cada 10 minutos ([Open-Meteo](https://open-meteo.com), gratuito y sin clave): con lluvia aparecen la lluvia, las goteras y los baldes; con tormenta, relámpagos; con calor, sol y frases de calor. Escenas de clima: `?escena=38` … `?escena=47`.
 - `?lite` → fuerza el modo liviano (para TVs o PCs modestas). Igual se activa solo si la pantalla no llega a 45 cuadros por segundo.
 - `?hd` → fuerza la calidad completa y desactiva el ajuste automático.
 

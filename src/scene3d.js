@@ -154,6 +154,7 @@ function init() {
     blending: THREE.AdditiveBlending, fog: true,
   }));
   scene.add(snow);
+  let fallMul = 1, swayMul = 1;
 
   // ---------- Bokeh navideño ----------
   const bokeh = [];
@@ -188,6 +189,14 @@ function init() {
     setRate(to, ms = 1500) { rateTarget = to; rateStep = 1 / Math.max(ms / 1000, 0.05); },
     dim(on) { dimTarget = on ? 0.25 : 1; },
     setQuality(level) { q = QUALITY[level] || q; applySize(); },
+    // clima: 'snow' (navidad), 'rain' (lluvia rápida y azulada) o 'none' (calor / día despejado)
+    setWeather(mode) {
+      snow.visible = mode !== 'none';
+      fallMul = mode === 'rain' ? 9 : 1; swayMul = mode === 'rain' ? 0.15 : 1;
+      snow.material.color.set(mode === 'rain' ? '#9cc4ff' : '#ffffff');
+      snow.material.size = mode === 'rain' ? 0.22 : 0.32;
+      snow.material.opacity = mode === 'rain' ? 0.7 : 0.55;
+    },
     // congela el fondo: el lienzo conserva el último cuadro (queda como imagen fija, costo casi nulo)
     pause(on) { frozen = on; running = !on && !document.hidden; if (running) { clock.getDelta(); loop(); } },
   };
@@ -218,8 +227,8 @@ function init() {
 
     const p = snowGeo.attributes.position.array;
     for (let i = 0; i < SNOW; i++) {
-      p[i * 3 + 1] -= spd[i] * dt;
-      p[i * 3] += Math.sin(t * 0.8 + phase[i]) * 0.012;
+      p[i * 3 + 1] -= spd[i] * dt * fallMul;
+      p[i * 3] += Math.sin(t * 0.8 + phase[i]) * 0.012 * swayMul - (fallMul > 1 ? dt * 1.2 : 0);
       if (p[i * 3 + 1] < -26) { p[i * 3 + 1] = 26; p[i * 3] = (Math.random() - 0.5) * 90; }
     }
     snowGeo.attributes.position.needsUpdate = true;
