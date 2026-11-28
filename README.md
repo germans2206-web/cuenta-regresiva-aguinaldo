@@ -58,6 +58,7 @@ Panel online que muestra **PARA EL AGUINALDO FALTA _días · horas · minutos ·
 - `?clima=lluvia` (o `llovizna`, `tormenta`, `granizo`, `calor`, `frio`, `nublado`, `sol`, `niebla`) y `?temp=38` → fuerzan un clima para probar. Sin ese parámetro, el panel lee el **clima real de Asunción** cada 10 minutos ([Open-Meteo](https://open-meteo.com), gratuito y sin clave): con lluvia aparecen la lluvia, las goteras y los baldes; con tormenta, relámpagos; con calor, sol y frases de calor. Escenas de clima: `?escena=38` … `?escena=47`.
 - `?lite` → fuerza el modo liviano (para TVs o PCs modestas). Igual se activa solo si la pantalla no llega a 45 cuadros por segundo.
 - `?hd` → fuerza la calidad completa y desactiva el ajuste automático.
+- **Noticias del día**: cada mañana una tarea automática actualiza `public/data/noticias.json` con las noticias destacadas de Paraguay y un toque de humor, que aparecen en el cartel de Avisos (ver [docs/NOTICIAS.md](docs/NOTICIAS.md)).
 
 ## Desarrollo y despliegue (Cloudflare Workers – Static Assets)
 ```bash

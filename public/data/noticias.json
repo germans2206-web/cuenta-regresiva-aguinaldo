@@ -1,0 +1,48 @@
+{
+  "fecha": "2026-11-28",
+  "generado": "2026-11-28T09:10:00-03:00",
+  "noticias": [
+    {
+      "tema": "futbol",
+      "texto": "OLIMPIA BICAMPEÓN 2026 Y VAN 49 ESTRELLAS. LOS DE CERRO DEL TALLER PIDEN ADELANTAR EL AGUINALDO PARA OLVIDAR LAS PENAS 🏆",
+      "fuente": "Infobae / EFE",
+      "url": "https://www.infobae.com/america/agencias/2026/11/23/olimpia-es-campeon-del-torneo-clausura-de-paraguay/"
+    },
+    {
+      "tema": "politica",
+      "texto": "EL EXMINISTRO FERNÁNDEZ VALDOVINOS SE ENTREGÓ POR EL CASO UENO. EN EL TALLER, LO ÚNICO QUE SE VA A ENTREGAR CON GUSTO ES EL AGUINALDO… EL 15 💸",
+      "fuente": "Última Hora",
+      "url": "https://www.ultimahora.com/nacionales"
+    },
+    {
+      "tema": "futbol",
+      "texto": "NACIONAL LE GANÓ 3-1 A RUBIO ÑU Y QUEDÓ SEGUNDO: COMO EL QUE LLEGA SEGUNDO A LA FILA DEL CAJERO EL 15 ⚽",
+      "fuente": "D10 / Última Hora",
+      "url": "https://d10.ultimahora.com/nacional-suma-de-a-tres-y-salta-a-la-segunda-posicion"
+    },
+    {
+      "tema": "clima",
+      "texto": "METEOROLOGÍA ALERTA TORMENTAS EN 10 DEPARTAMENTOS: BALDES LISTOS BAJO LAS GOTERAS Y VENTANAS DEL AUTO BIEN CERRADAS ⛈️",
+      "fuente": "Última Hora",
+      "url": "https://www.ultimahora.com/nacionales"
+    },
+    {
+      "tema": "politica",
+      "texto": "EL SENADO APROBÓ EL PRESUPUESTO 2027 Y EL FORO MULTISECTORIAL LO CUESTIONA. EL PRESUPUESTO DEL TALLER NO SE DISCUTE: CHIPA Y TERERÉ 🧉",
+      "fuente": "Última Hora",
+      "url": "https://www.ultimahora.com/"
+    },
+    {
+      "tema": "economia",
+      "texto": "REPORTAN POCAS MÁQUINAS TRABAJANDO EN OBRAS FINANCIADAS POR ITAIPÚ. ACÁ LAS MÁQUINAS NO PARAN… SALVO CUANDO EL RATÓN SE ROBA EL PERNO 🐭",
+      "fuente": "Última Hora",
+      "url": "https://www.ultimahora.com/ultimas-noticias"
+    },
+    {
+      "tema": "actualidad",
+      "texto": "INVESTIGAN A UN CAMIÓN QUE TIRÓ BASURA EN PLENA CALLE DE ASUNCIÓN. EL PINSCHER YA SE OFRECIÓ COMO INSPECTOR 🐕",
+      "fuente": "Última Hora",
+      "url": "https://www.ultimahora.com/"
+    }
+  ]
+}

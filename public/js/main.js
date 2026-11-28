@@ -153,6 +153,29 @@ const WX_TICKER = {
   sol: ['DÍA DE SOL EN ASUNCIÓN: PROTECTOR SOLAR PARA LOS QUE TRABAJAN AFUERA ☀️'],
 };
 WX_TICKER.granizo = WX_TICKER.tormenta;
+/* Noticias del día con humor: las escribe cada mañana una tarea automática en /data/noticias.json */
+let NEWS = [];
+async function loadNews() {
+  try {
+    const r = await fetch('data/noticias.json', { cache: 'no-cache' });
+    if (!r.ok) return;
+    const j = await r.json();
+    const age = (Date.now() - new Date(j.fecha + 'T12:00:00-03:00')) / 86400000;
+    if (!(age < 3) || !Array.isArray(j.noticias)) { NEWS = []; return; }   // viejas: no se muestran
+    NEWS = j.noticias.map((n) => String(n.texto || '').replace(/[<>]/g, '').slice(0, 200).trim()).filter(Boolean).slice(0, 12).map((t) => '📰 ' + t);
+  } catch (e) { /* sin noticias: el cartel sigue con los avisos de siempre */ }
+}
+// intercala noticias entre los avisos (una noticia cada dos avisos)
+function mixNews(msgs) {
+  if (!NEWS.length) return msgs;
+  const out = []; let k = 0;
+  msgs.forEach((m, i) => { out.push(m); if (i % 2 === 1 && k < NEWS.length) out.push(NEWS[k++]); });
+  while (k < NEWS.length) out.push(NEWS[k++]);
+  return out;
+}
+loadNews().then(() => { if (NEWS.length && !tickerAlarm && !director?.party) { tickerAnim?.cancel(); runTicker(); } });
+setInterval(loadNews, 30 * 60 * 1000);
+
 function weatherTicker() {
   if (!W.ok) return [];
   return [`CLIMA EN ASUNCIÓN: ${Math.round(W.temp)}°C · ${W.label} ${W.icon}`, ...(WX_TICKER[W.kind] || [])];
@@ -160,7 +183,10 @@ function weatherTicker() {
 const track = $('#tickerTrack');
 function setTickerAlarm(on) { if (on === tickerAlarm) return; tickerAlarm = on; tickerAnim?.cancel(); runTicker(); }
 function runTicker() {
-  track.innerHTML = (tickerAlarm ? ALARM : [...weatherTicker(), ...MESSAGES]).map((m) => `<span>${fill(m)}</span>`).join('');
+  // texto plano siempre (las noticias vienen de afuera: nunca se interpretan como HTML)
+  track.replaceChildren(...(tickerAlarm ? ALARM : [...weatherTicker(), ...mixNews(MESSAGES)]).map((m) => {
+    const sp = document.createElement('span'); sp.textContent = fill(m); return sp;
+  }));
   track.style.color = tickerAlarm ? '#ff5a3c' : '';
   const win = track.parentElement.clientWidth;
   const w = track.scrollWidth;
