@@ -1,6 +1,6 @@
 {
   "fecha": "2026-11-28",
-  "generado": "2026-11-28T09:10:00-03:00",
+  "generado": "2026-11-28T10:30:00-03:00",
   "noticias": [
     {
       "tema": "futbol",
@@ -43,6 +43,36 @@
       "texto": "INVESTIGAN A UN CAMIÓN QUE TIRÓ BASURA EN PLENA CALLE DE ASUNCIÓN. EL PINSCHER YA SE OFRECIÓ COMO INSPECTOR 🐕",
       "fuente": "Última Hora",
       "url": "https://www.ultimahora.com/"
+    },
+    {
+      "tema": "futbol",
+      "texto": "HOY ES LA FINAL DE LA LIBERTADORES EN MONTEVIDEO: PALMEIRAS VS ESTUDIANTES. LA FINAL QUE ESPERA EL TALLER ES OTRA: LA DEL 15 DE DICIEMBRE 🏆",
+      "fuente": "ABC Color",
+      "url": "https://www.abc.com.py/deportes/polideportivo/2026/11/28/sabado-28-de-noviembre-de-2026/"
+    },
+    {
+      "tema": "futbol",
+      "texto": "CERRO PORTEÑO RECIBE A GUARANÍ EL DOMINGO A LAS 17:30 EN LA NUEVA OLLA. EL PINSCHER YA ESTÁ NERVIOSO… BUENO, SIEMPRE ESTÁ NERVIOSO 🐕",
+      "fuente": "Club Cerro Porteño",
+      "url": "https://clubcerro.com/cerro-porteno-recibe-a-guarani-en-la-nueva-olla-en-el-arranque-dominical-de-la-fecha-21-del-clausura/"
+    },
+    {
+      "tema": "futbol",
+      "texto": "LIBERTAD LE GANÓ 3-0 A CERRO Y SE QUEDÓ CON EL TERCER PUESTO DE LA COPA PARAGUAY. EL PULPO, CONSULTADO SI LO VIO: «¡SEEEEEE!» 🐙",
+      "fuente": "1000 Noticias",
+      "url": "https://1000noticias.com.py/2026/11/26/libertad-derrota-a-cerro-porteno-y-queda-tercero-en-la-copa-paraguay-2026/"
+    },
+    {
+      "tema": "actualidad",
+      "texto": "LA PATRULLA CAMINERA REFUERZA CONTROLES POR CAACUPÉ 2026. EL CONEJO VA EN BICI… CON CASCO Y CON EL PATO DE ACOMPAÑANTE (QUE DIOS LOS AYUDE) 🚲",
+      "fuente": "ABC Color",
+      "url": "https://www.abc.com.py/730am/contacto-ciudadano/2026/11/28/audio-patrulla-caminera-reforzara-controles-en-el-marco-del-operativo-caacupe-2026/"
+    },
+    {
+      "tema": "politica",
+      "texto": "UN JUEZ MANTIENE EL BLOQUEO DE CUENTAS Y BIENES DEL GRUPO VÁZQUEZ. EN EL TALLER LA ÚNICA CUENTA BLOQUEADA ES LA DEL RATÓN: NADIE LE PRESTA 🐭",
+      "fuente": "1000 Noticias",
+      "url": "https://1000noticias.com.py/2026/11/28/28-noviembre-2026/"
     }
   ]
 }

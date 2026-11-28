@@ -18,7 +18,7 @@ Cada mañana una tarea programada busca las noticias más destacadas de Paraguay
 - `tema`: `politica`, `futbol`, `deportes`, `economia`, `actualidad`, `clima`, `tecnologia` o `cultura`.
 - `texto`: entre 20 y 180 caracteres, en MAYÚSCULAS, sin `<` ni `>`. El hecho primero y el chiste después; puede terminar con un emoji.
 - `fuente` y `url`: el medio y el enlace https a la nota.
-- Entre 3 y 12 noticias (lo ideal: 6 a 8).
+- Entre 3 y 12 noticias (lo ideal: 10 a 12). Se actualizan dos veces por día: 05:52 (lo de la noche y la mañana temprano) y 14:52 (lo del mediodía y la tarde).
 
 Antes de publicar: `node scripts/validar-noticias.mjs` (falla si algo no cumple).
 

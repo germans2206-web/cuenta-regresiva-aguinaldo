@@ -165,12 +165,14 @@ async function loadNews() {
     NEWS = j.noticias.map((n) => String(n.texto || '').replace(/[<>]/g, '').slice(0, 200).trim()).filter(Boolean).slice(0, 12).map((t) => '📰 ' + t);
   } catch (e) { /* sin noticias: el cartel sigue con los avisos de siempre */ }
 }
-// intercala noticias entre los avisos (una noticia cada dos avisos)
+// intercala noticias y avisos 1 a 1; cada vuelta arranca en otra noticia y otro aviso (no se siente repetitivo)
+let newsTurn = 0;
 function mixNews(msgs) {
   if (!NEWS.length) return msgs;
-  const out = []; let k = 0;
-  msgs.forEach((m, i) => { out.push(m); if (i % 2 === 1 && k < NEWS.length) out.push(NEWS[k++]); });
-  while (k < NEWS.length) out.push(NEWS[k++]);
+  const n = NEWS.length, m = msgs.length, out = [];
+  const ns = (newsTurn * 5) % n, ms = (newsTurn * 3) % m; newsTurn++;
+  const count = Math.max(n, Math.min(m, n));
+  for (let k = 0; k < count; k++) { out.push(NEWS[(ns + k) % n]); out.push(msgs[(ms + k) % m]); }
   return out;
 }
 loadNews().then(() => { if (NEWS.length && !tickerAlarm && !director?.party) { tickerAnim?.cancel(); runTicker(); } });
