@@ -240,6 +240,10 @@ class Actor {
     this.layer = null;
     this.setLayer(def.layer);
     this.busy = false; this.lastShown = -1e9; this.bag = [];
+    this.solo = false;      // trabajando por su cuenta (ciclo normal), no en escena ni parada
+    this.held = 0;          // alguien le está hablando: se queda quieto escuchando
+    this.inChat = false;    // está iniciando una charla con otro
+    this.moving = false; this.leaving = false; this.sayTimer = null;
     this.action = null;
     this.pos = { x: 0, y: 0 };
     this.spot = this.spots[0] || null;
@@ -257,7 +261,15 @@ class Actor {
     this.el.style.transform = `translate(${this.pos.x}px, ${this.pos.y}px)`;
   }
   show() { this.el.classList.add('on'); }
-  hide(force = false) { if (director.party && !force) return; this.el.classList.remove('on', 'walking', 'riding', 'flying', 'face-left'); }
+  hide(force = false) { if (director.party && !force) return; this.el.classList.remove('on', 'walking', 'riding', 'flying', 'face-left'); this.dropBubble(); }
+  // retira el globo del personaje (por ejemplo, cuando se va del escenario)
+  dropBubble() {
+    clearTimeout(this.sayTimer); this.sayTimer = null;
+    const b = this.bubble;
+    if (b && b.isConnected && !b.classList.contains('out')) { b.classList.add('out'); clearTimeout(b._t); setTimeout(() => { if (b.isConnected) { b.remove(); activeBubbles--; } }, 260); }
+  }
+  // espera mientras alguien le está hablando
+  async waitHeld() { let n = 0; while (this.held > 0 && n++ < 120 && !director.party) await sleep(250); }
   resetHome(force = false) {
     if (director.party && !force) return;
     this.act(null); this.hide(force); this.place(this.st.x, this.st.y, force);
@@ -335,7 +347,9 @@ class Actor {
     if (mode === 'sneak') this.el.classList.add('sneaking');
     if (o.face !== false) this.el.classList.toggle('face-left', dx < -2);
     const a = this.el.animate(frames, { duration: dur, easing: o.easing || (o.arc ? 'linear' : mode === 'fly' ? 'ease-in-out' : 'linear'), fill: 'forwards' });
+    this.moving = true;
     await a.finished.catch(() => {});
+    this.moving = false;
     if (director.party) return;          // la fiesta canceló el movimiento
     this.pos = { x: nx, y: ny };
     this.el.style.transform = to;
@@ -392,6 +406,8 @@ class Actor {
   }
   async exit() {
     if (director.party) return;
+    this.leaving = true;
+    this.dropBubble();                    // el globo se va con el personaje
     const d = this.def, st = this.st;
     if (d.travel === 'leap') {
       await this.moveTo(this.x > 960 ? 2150 : -230, Math.min(this.y, 700), { mode: 'leap', arc: 200 });
@@ -418,6 +434,7 @@ class Actor {
         case 'peekup': await this.moveTo(st.x, st.y + 200, { mode: 'none', dur: 700, easing: 'ease-in' }); break;
       }
     }
+    this.leaving = false;
     this.resetHome();
   }
   dust(n = 8) {
@@ -432,13 +449,14 @@ class Actor {
   }
   async perform(n) {
     for (let i = 0; i < n && !director.party; i++) {
+      await this.waitHeld();
       if (this.spots.length > 1 && i > 0 && Math.random() < (this.def.roamChance || 0)) {
         const others = this.spots.filter((p) => p !== this.spot);
         await this.travelTo(pick(others));
       }
-      if (this.def.id === 'mouse' && Math.random() < (this.def.tripChance || 0)) { await mouseHeist(this); continue; }
+      if (this.def.id === 'mouse' && Math.random() < (this.def.tripChance || 0)) { this.inChat = true; try { await mouseHeist(this); } finally { this.inChat = false; } continue; }
       if (this.def.id === 'bird' && Math.random() < 0.55 && (await sageVisit(this))) continue;
-      if (this.def.id === 'pinscher' && Math.random() < (this.def.tripChance || 0)) { await zoomies(this); continue; }
+      if (this.def.id === 'pinscher' && Math.random() < (this.def.tripChance || 0)) { this.inChat = true; try { await zoomies(this); } finally { this.inChat = false; } continue; }
       if (this.def.id !== 'bird' && Math.random() < 0.14 && (await aguiChat(this))) continue;
       if (W.ok && Math.random() < (wxGroup(W.kind) ? 0.2 : 0.07) && (await weatherChat(this))) continue;
       const a = this.act(this.nextAction().id);
@@ -447,9 +465,11 @@ class Actor {
         const line = pick(a.say);
         // el pájaro se queda quieto hasta que se pueda leer su frase completa
         if (this.def.id === 'bird') wait = Math.max(wait, readMs(fill(line)) + 500);
-        setTimeout(() => this.say(line, Math.min(3400, a.dur * 1000 - 400)), 350);
+        clearTimeout(this.sayTimer);
+        this.sayTimer = setTimeout(() => { this.sayTimer = null; if (!this.held && !this.leaving) this.say(line, Math.min(3400, a.dur * 1000 - 400)); }, 350);
       }
       await sleep(wait);
+      await this.waitHeld();
       this.act(null);
       await sleep((this.def.gap || 0.6) * 1000);
     }
@@ -457,7 +477,10 @@ class Actor {
   async run() {
     this.busy = true;
     await this.enter();
+    this.solo = true;
     await this.perform(this.def.spots ? 4 + Math.floor(Math.random() * 3) : 3 + Math.floor(Math.random() * 3));
+    await this.waitHeld();                // no se va en medio de una charla
+    this.solo = false;
     if (!director.party) {
       await this.exit();
       this.lastShown = performance.now();
@@ -526,44 +549,98 @@ async function mouseHeist(m) {
 
 /* ---------------- Don Anó, el sabio: vuela hasta un compañero y le da un consejo ---------------- */
 async function sageVisit(b) {
-  const others = actors.filter((a) => a !== b && a.busy && a.el.classList.contains('on') && !(a.def.id === 'mouse' && a.layer === 'back'));
+  if (b.held || b.inChat) return false;
+  const others = actors.filter((o) => canTalkTo(o, b));
   if (!others.length) return false;
   const t = pick(others);
-  const side = t.x > 1500 ? -1 : t.x < 400 ? 1 : (Math.random() < 0.5 ? -1 : 1);
-  const headY = t.top + t.pos.y + t.h * 0.25;
-  const x = Math.max(120, Math.min(1800, t.x + side * (t.w * 0.45 + 70)));
-  const y = Math.max(200, Math.min(980, headY));
-  await b.moveTo(x, y, { mode: 'fly', arc: 80 });
-  b.spot = { x, y, level: 'air' };
-  b.el.classList.toggle('face-left', t.x < b.x);
-  b.act('advise');
-  const line = SAGE_FOR[t.def.id] || pick(SAGE);
-  b.say(line, 4600, true);
-  await sleep(readMs(line) + 300);
-  b.act(null);
-  b.el.classList.remove('face-left');
+  // el que va a recibir el consejo espera quieto mientras el pájaro llega volando
+  b.inChat = true; t.held++; clearTimeout(t.sayTimer); t.sayTimer = null;
+  let release = () => { b.inChat = false; t.held = Math.max(0, t.held - 1); };
+  try {
+    const side = t.x > 1500 ? -1 : t.x < 400 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+    const headY = t.top + t.pos.y + t.h * 0.25;
+    const x = Math.max(120, Math.min(1800, t.x + side * (t.w * 0.45 + 70)));
+    const y = Math.max(200, Math.min(980, headY));
+    await b.moveTo(x, y, { mode: 'fly', arc: 80 });
+    b.spot = { x, y, level: 'air' };
+    if (!stillHere(t)) return true;
+    t.act(null);
+    faceEachOther(b, t);
+    b.act('advise');
+    const line = SAGE_FOR[t.def.id] || pick(SAGE);
+    b.say(line, 4600, true);
+    await sleep(readMs(line) + 300);
+    if (stillHere(t)) {
+      const thx = pick(THANKS[t.def.id] || THANKS_ANY);
+      t.say(thx, 2600, true); await sleep(2600);
+    }
+    b.act(null);
+  } finally {
+    b.el.classList.remove('face-left'); t.el.classList.remove('face-left');
+    release();
+  }
   await sleep(300);
   await b.travelTo(pick(b.spots));
   return true;
 }
 
+/* ---------------- Conversaciones entre personajes ----------------
+   Para que una charla se sienta real: solo se le habla a quien está trabajando por su cuenta,
+   quieto y sin otra charla; mientras dura, el que escucha se detiene, mira al que habla,
+   no dice frases propias y no se va del escenario. */
+function canTalkTo(o, from) {
+  return o !== from && o.solo && !o.held && !o.inChat && !o.moving && !o.leaving
+    && o.el.classList.contains('on') && !(o.def.id === 'mouse' && o.layer === 'back')
+    && !BD.active && !director.party;
+}
+function faceEachOther(a, b) {
+  a.el.classList.toggle('face-left', b.x < a.x);
+  b.el.classList.toggle('face-left', a.x < b.x);
+}
+// reserva al que escucha: corta su frase pendiente y lo deja mirando al que habla
+function engage(a, t) {
+  a.inChat = true; t.held++;
+  clearTimeout(t.sayTimer); t.sayTimer = null;
+  t.act(null);
+  faceEachOther(a, t);
+  let done = false;
+  const release = () => { if (done) return; done = true; a.inChat = false; t.held = Math.max(0, t.held - 1); a.el.classList.remove('face-left'); t.el.classList.remove('face-left'); };
+  setTimeout(release, 30000);           // seguro: nunca queda trabado
+  return release;
+}
+const stillHere = (o) => o.el.classList.contains('on') && !o.leaving && !director.party;
+const talkMs = (o, t) => (o.def.id === 'bird' ? readMs(t) : Math.min(4200, 1800 + t.length * 38));
+
+const THANKS = {
+  pinscher: ['GRR… bueno, gracias 😤', '¡Ya sé, ya sé! …gracias igual'],
+  octo: ['¡SEEEEEE! Aguyje 🙏'],
+  duck: ['¡Aguyje, sabio! …¿me lo repetís? ¡CUAC!'],
+  parrot: ['¡Aguyje! ¡Aguyje! 🦜'],
+  mouse: ['Aguyje… (no prometo nada) 😏'],
+  monkey: ['¡Aguyje! ¡Lo anoto en el celular! 🐒'],
+};
+const THANKS_ANY = ['¡Aguyje! Lo voy a tener en cuenta 🙏', 'Mmm… tiene razón el sabio 🤔', '¡Gracias por el consejo! 🐦'];
+
 /* ---------------- ¿Qué vas a hacer con tu aguinaldo? (charla rápida entre dos que están en pantalla) ---------------- */
 async function aguiChat(a) {
-  const others = actors.filter((o) => o !== a && o.busy && o.el.classList.contains('on') && !(o.def.id === 'mouse' && o.layer === 'back') && AGUI_PLANS[o.def.id]);
+  if (a.held || a.inChat) return false;
+  const others = actors.filter((o) => canTalkTo(o, a) && AGUI_PLANS[o.def.id]);
   if (!others.length) return false;
   const t = pick(others);
-  a.el.classList.toggle('face-left', t.x < a.x);
-  a.say(pick(AGUI_ASK), 2600, true);
-  await sleep(2600);
-  const ans = pick(AGUI_PLANS[t.def.id]);
-  const wait = t.def.id === 'bird' ? readMs(ans) : 3400;
-  t.say(ans, wait, true);
-  await sleep(wait);
-  if (/hendapait/i.test(ans) && Math.random() < 0.6) {
-    a.say(pick(['¡Hendapaitéma también el mío! 😂', 'Igual que todos, che 😂', 'Ya sabía… ¡hendapaitéma! 💸']), 2400, true);
-    await sleep(2400);
-  }
-  a.el.classList.remove('face-left');
+  const release = engage(a, t);
+  try {
+    const q = pick(AGUI_ASK);
+    a.say(q, talkMs(a, q) + 400, true);
+    await sleep(talkMs(a, q) + 200);
+    if (!stillHere(a) || !stillHere(t)) return true;
+    const ans = pick(AGUI_PLANS[t.def.id]);
+    t.say(ans, talkMs(t, ans) + 400, true);
+    await sleep(talkMs(t, ans) + 200);
+    if (/hendapait/i.test(ans) && Math.random() < 0.6 && stillHere(a)) {
+      const r = pick(['¡Hendapaitéma también el mío! 😂', 'Igual que todos, che 😂', 'Ya sabía… ¡hendapaitéma! 💸']);
+      a.say(r, 2600, true); await sleep(2400);
+    }
+  } finally { release(); }
   return true;
 }
 
@@ -574,17 +651,22 @@ function weatherLine(id) {
   return pool ? pick(pool) : null;
 }
 async function weatherChat(a) {
+  if (a.held || a.inChat) return false;
   const line = weatherLine(a.def.id);
   if (!line) return false;
-  if (a.def.id === 'bear' && wxGroup(W.kind) === 'hot') a.act('sweat');
-  a.say(line, a.def.id === 'bird' ? readMs(line) : 3600, true);
-  await sleep(a.def.id === 'bird' ? readMs(line) + 300 : 3800);
-  // a veces otro que está en pantalla le responde
-  const others = actors.filter((o) => o !== a && o.busy && o.el.classList.contains('on') && !(o.def.id === 'mouse' && o.layer === 'back'));
-  if (others.length && Math.random() < 0.45) {
-    const o = pick(others), r = weatherLine(o.def.id);
-    if (r && r !== line) { o.say(r, o.def.id === 'bird' ? readMs(r) : 3400, true); await sleep(o.def.id === 'bird' ? readMs(r) : 3400); }
-  }
+  // a veces se lo comenta a otro que está cerca trabajando, y el otro le responde
+  const others = actors.filter((o) => canTalkTo(o, a));
+  const t = others.length && Math.random() < 0.55 ? pick(others) : null;
+  const release = t ? engage(a, t) : null;
+  try {
+    if (a.def.id === 'bear' && wxGroup(W.kind) === 'hot') a.act('sweat');
+    a.say(line, talkMs(a, line) + 400, true);
+    await sleep(talkMs(a, line) + 200);
+    if (t && stillHere(t) && stillHere(a)) {
+      const r = weatherLine(t.def.id);
+      if (r && r !== line) { t.say(r, talkMs(t, r) + 400, true); await sleep(talkMs(t, r) + 200); }
+    }
+  } finally { release?.(); }
   return true;
 }
 
